@@ -407,6 +407,12 @@
     margin-top: 3px;
   }
 
+  .card-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 18px 0;
+  }
+
   @media (max-width: 600px) {
     .wrap { padding: 32px 16px 60px; }
     .site-header { flex-direction: column; align-items: flex-start; gap: 10px; }
@@ -507,6 +513,87 @@
     <p class="app-note">*Refer to your site lead regarding which app section you should interact with.</p>
   </div>
 
+  <div class="section-heading-row">
+    <h2>Local File Deletion</h2>
+  </div>
+  <p class="section-subtitle">
+    Script for deleting local files after confirming perfect match in S3.
+  </p>
+
+  <div class="site-card">
+
+    <details class="site-item">
+      <summary class="site-header">
+        <div class="site-name">
+          <span class="site-badge">1</span>
+          <span class="site-title-text">One-time setup</span>
+        </div>
+        <span class="site-chevron">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </span>
+      </summary>
+      <div class="site-panel">
+        <div class="site-panel-content">
+          <p><strong>Install Python 3 and the <code>awscrt</code> package</strong></p>
+          <ul>
+            <li><strong>macOS:</strong>
+              <pre><code>brew install python3
+pip3 install awscrt --break-system-packages</code></pre>
+            </li>
+            <li><strong>Windows:</strong>
+              <ol>
+                <li>Download from <a href="https://www.python.org/downloads/" target="_blank" rel="noopener">python.org/downloads</a> (check "Add python.exe to PATH" during install).</li>
+                <li><code>pip install awscrt</code></li>
+              </ol>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </details>
+
+    <details class="site-item">
+      <summary class="site-header">
+        <div class="site-name">
+          <span class="site-badge">2</span>
+          <span class="site-title-text">Run deletion script</span>
+        </div>
+        <span class="site-chevron">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </span>
+      </summary>
+      <div class="site-panel">
+        <div class="site-panel-content">
+          <p>Deletes verified subdirectories of local files for one specified date.</p>
+
+          <h2>File scanning</h2>
+          <p>The script processes one date at a time. It scans .mov files in each subdirectory of that date's folder, to confirm the following:</p>
+          <ol>
+            <li>The object still exists in S3.</li>
+            <li>A checksum computed on the local file right now matches S3's current stored checksum.</li>
+          </ol>
+          <p>A per-file failure detail prints directly in the terminal if any check fails, along with an explicit list of which subdirectories passed and which failed.</p>
+          <p><strong>Deletion happens per subdirectory, not per date folder.</strong> A subdirectory is only deleted if every file inside it passes both checks. A failure in one subdirectory does not block deletion of others that passed; the failing subdirectory is simply left behind. If every subdirectory in the date folder ends up deleted, the now-empty date folder is removed too.</p>
+
+          <h2>Notes</h2>
+          <p><strong>If any subdirectory fails verification:</strong></p>
+          <ul>
+            <li>That subdirectory is left in place. The script lists which subdirectories passed and which failed.</li>
+            <li>Check the failure detail printed in the terminal to see exactly which file(s) failed and why (missing checksum, object not found in S3, or a genuine mismatch).</li>
+            <li>Do not re-run deletion for that subdirectory until the cause is understood. A mismatch could mean real data corruption, not just a script issue.</li>
+          </ul>
+          <p><strong>If one or more subdirectories pass:</strong></p>
+          <ul>
+            <li>The script shows exactly which subdirectories it's about to delete (path and file count for each).</li>
+            <li>Type <strong>DELETE</strong> in all caps to confirm. Anything else cancels safely with nothing removed.</li>
+            <li>On confirmation, each passed subdirectory is deleted and logged as its own row in <code>deletion_log.csv</code> in your base folder (timestamp, site, date, subdirectory, folder, file count). This is your audit record.</li>
+            <li>If no subdirectories passed at all, the script stops before asking for confirmation; there is nothing to delete.</li>
+          </ul>
+        </div>
+      </div>
+    </details>
+
+  </div>
+
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
@@ -523,6 +610,7 @@
       content.dataset.loaded = 'true';
 
       var gistId = content.dataset.gistId;
+      if (!gistId) return;
 
       fetch('https://api.github.com/gists/' + gistId)
         .then(function (res) {
