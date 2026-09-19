@@ -16,13 +16,14 @@
       "by": "Hassen"
     },
     "qa-edits": {
-      "status": "prog",
-      "updatedAt": "2026-09-19T07:19:43.059Z",
-      "by": "Hassen"
+      "status": "done",
+      "updatedAt": "2026-09-19T07:22:08.310Z",
+      "by": "Bridgette"
     },
     "bridgette": {
-      "status": "todo",
-      "updatedAt": ""
+      "status": "prog",
+      "updatedAt": "2026-09-19T07:22:10.877Z",
+      "by": "Bridgette"
     },
     "anomalies": {
       "status": "todo",
@@ -44,5 +45,5 @@
   "deliveryDate": "",
   "liveSets": null,
   "spoofSets": null,
-  "exportedAt": "2026-09-19T07:21:12.414Z"
+  "exportedAt": "2026-09-19T07:22:15.158Z"
 }
