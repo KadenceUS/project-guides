@@ -47,7 +47,7 @@ h1{font-size:clamp(1.75rem,5vw,2.5rem);line-height:1.15;font-weight:400;letter-s
 .info-line.align-right{margin-left:auto;text-align:right}
 .info-label{color:var(--muted)}
 .info-value{color:var(--ink);font-weight:700}
-.info-value .weekday{font-weight:300}
+.info-value .weekday{color:var(--muted);font-weight:400}
 .sets-line{display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
 .sets-line .meta-item{color:var(--muted);display:flex;align-items:center;gap:.35rem}
 .sets-line .meta-item strong{color:var(--ink);font-weight:700}
@@ -149,13 +149,7 @@ ol.steps{list-style:none;margin:0;padding:0;position:relative}
     var p = ymd.split("-"), d = new Date(Number(p[0]), Number(p[1])-1, Number(p[2]));
     if(isNaN(d)) return ymd;
     var weekday = d.toLocaleDateString([], {weekday:"short"});
-    var month = d.toLocaleDateString([], {month:"short"});
-    var day = d.getDate();
-    var suffix = "th";
-    if(day % 10 === 1 && day !== 11) suffix = "st";
-    else if(day % 10 === 2 && day !== 12) suffix = "nd";
-    else if(day % 10 === 3 && day !== 13) suffix = "rd";
-    return '<span class="weekday">' + weekday + '</span> ' + month + " " + day + suffix;
+    return '<span class="weekday">' + weekday + '</span> ' + (d.getMonth()+1) + "/" + d.getDate();
   }
   function render(data){
     var steps = (data && data.steps) || {};
