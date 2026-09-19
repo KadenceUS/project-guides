@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mew delivery status — editor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FAFAFC; --surface:#FFFFFF; --ink:#16163A; --muted:#64677E; --line:#E3E4EC;
+  --brand:#2D2A8C;
+  --s-todo:#9A9DB0;  --s-todo-bg:#EEEFF4;
+  --s-prog:#85B7EB;  --s-prog-bg:#E6F1FB;  --s-prog-light:#85B7EB;
+  --s-done:#185FA5;  --s-done-bg:#DDEAFC;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#101024; --surface:#181833; --ink:#ECECF7; --muted:#9FA2BC; --line:#2B2B4D;
+    --brand:#A5A2FF;
+    --s-todo:#8286A3; --s-todo-bg:#23233F;
+    --s-prog:#B5D4F4; --s-prog-bg:#0C447C; --s-prog-light:#B5D4F4;
+    --s-done:#378ADD; --s-done-bg:#042C53;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#101024; --surface:#181833; --ink:#ECECF7; --muted:#9FA2BC; --line:#2B2B4D;
+  --brand:#A5A2FF;
+  --s-todo:#8286A3; --s-todo-bg:#23233F;
+  --s-prog:#B5D4F4; --s-prog-bg:#0C447C; --s-prog-light:#B5D4F4;
+  --s-done:#378ADD; --s-done-bg:#042C53;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:1rem;line-height:1.5;-webkit-font-smoothing:antialiased}
+main{max-width:46rem;margin:0 auto;padding:3rem 1.25rem 4rem}
+
+.private-notice{display:flex;align-items:center;gap:.5rem;font-size:.8rem;font-weight:600;color:var(--brand);
+  background:var(--s-prog-bg);border:1px solid var(--s-prog);border-radius:8px;padding:.5rem .8rem;margin-bottom:1.5rem}
+
+/* header */
+.heading-row{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap-reverse;margin-bottom:.5rem}
+h1{font-size:clamp(1.75rem,5vw,2.5rem);line-height:1.15;font-weight:400;letter-spacing:-.02em;margin:0}
+.study{color:var(--ink);font-weight:800}
+.sub{color:var(--muted);margin:0}
+.date-line{display:flex;align-items:center;gap:.5rem;margin-top:.75rem;font-size:1.4rem;color:var(--muted)}
+.date-input{font:inherit;font-size:1.4rem;color:var(--ink);background:transparent;border:0;
+  border-bottom:1px dashed transparent;padding:.1rem 0}
+.date-input:hover{border-bottom-color:var(--line)}
+.date-input:focus{outline:none;border-bottom-color:var(--brand);color:var(--ink)}
+
+/* segmented progress */
+.segments{display:grid;grid-template-columns:repeat(9,1fr);gap:4px;margin:1.75rem 0 2.5rem}
+.seg{height:10px;border-radius:2px;background:var(--s-todo-bg);transition:background .25s}
+
+/* steps */
+ol.steps{list-style:none;margin:0;padding:0;position:relative}
+.step{display:grid;grid-template-columns:1.5rem 1fr;column-gap:1rem;position:relative;padding-bottom:1.5rem}
+.step:not(:last-child)::before{content:"";position:absolute;left:calc(.75rem - 1px);top:1.6rem;bottom:0;width:2px;background:var(--line);z-index:0}
+.node{width:1.5rem;height:1.5rem;border-radius:50%;display:grid;place-items:center;font-size:.75rem;font-weight:600;
+  position:relative;z-index:1;
+  color:var(--surface);background:var(--c);margin-top:.1rem;transition:background .25s}
+.body{min-width:0}
+.row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.5rem 1rem}
+.title-wrap{display:flex;align-items:center;flex:1 1 16rem;min-width:0}
+.title{font-weight:500;font-size:1.05rem;margin:0}
+.step[data-status="done"] .title{color:var(--muted)}
+
+select.status{font:inherit;font-size:.85rem;font-weight:600;color:var(--c);background-color:var(--cb);
+  border:1px solid transparent;border-radius:999px;padding:.3rem 1.8rem .3rem .8rem;cursor:pointer;
+  appearance:none;-webkit-appearance:none;
+  background-image:linear-gradient(45deg,transparent 50%,currentColor 50%),linear-gradient(135deg,currentColor 50%,transparent 50%);
+  background-position:calc(100% - 14px) 55%,calc(100% - 9px) 55%;background-size:5px 5px;background-repeat:no-repeat}
+select.status option{color:#16163A;background:#fff;font-weight:400}
+select.status[data-status="prog"]{color:var(--s-done);background-color:var(--s-done-bg)}
+.stamp{font-size:.78rem;color:var(--muted);margin:.15rem 0 0 0}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+
+[data-status="todo"]{--c:var(--s-todo);--cb:var(--s-todo-bg)}
+[data-status="prog"]{--c:var(--s-prog);--cb:var(--s-prog-bg)}
+[data-status="done"]{--c:var(--s-done);--cb:var(--s-done-bg)}
+.seg[data-status]{background:var(--c)}
+.seg[data-status="todo"]{background:var(--cb)}
+.seg[data-status="prog"]{background:var(--s-prog-light)}
+.step[data-status="prog"] .node{background:transparent;color:var(--s-prog)}
+.step[data-status="todo"] .node{background:transparent;border:1.5px solid var(--s-todo)}
+
+.status-line{display:flex;align-items:center;gap:.6rem;flex:none;margin-top:.3rem}
+.icon-btn{width:1.75rem;height:1.75rem;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
+  border:1px solid var(--line);background:transparent;color:var(--muted);cursor:pointer;padding:0}
+.icon-btn:hover{border-color:var(--muted);color:var(--ink)}
+.icon-btn.danger{border-color:#B92E25;color:#B92E25}
+.export-row{display:flex;align-items:center;gap:.75rem;margin-top:1.5rem;padding-top:1.25rem;border-top:1px solid var(--line);flex-wrap:wrap}
+button.primary{font:inherit;font-size:.85rem;color:#fff;background:var(--brand);border:1px solid var(--brand);
+  border-radius:6px;padding:.4rem .8rem;cursor:pointer}
+button.primary:hover{opacity:.9}
+button.secondary{font:inherit;font-size:.85rem;color:var(--ink);background:transparent;border:1px solid var(--line);
+  border-radius:6px;padding:.4rem .8rem;cursor:pointer}
+button.secondary:hover{border-color:var(--muted)}
+#sync,#publishStatus{font-size:.85rem;color:var(--muted)}
+.gh-config{margin-top:1rem;font-size:.85rem;color:var(--muted)}
+.gh-config summary{cursor:pointer;color:var(--ink);font-weight:500;padding:.25rem 0}
+.gh-fields{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-top:.75rem}
+.gh-fields label{display:flex;flex-direction:column;gap:.25rem;font-size:.8rem;color:var(--muted)}
+.gh-fields input{font:inherit;font-size:.85rem;color:var(--ink);background:var(--surface);
+  border:1px solid var(--line);border-radius:6px;padding:.4rem .5rem}
+.gh-fields input:focus{outline:none;border-color:var(--brand)}
+.gh-note{margin:.6rem 0 0;font-size:.78rem;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+  <p class="private-notice">Editor view — for you and your co-editor only, not the wider team. Publish updates below.</p>
+  <header>
+    <div class="heading-row">
+      <h1 id="headline"><span class="study" id="studyName">Mew</span> Client Delivery Progress</h1>
+      <div class="status-line">
+        <button id="reset" type="button" class="icon-btn" title="Reset for next delivery" aria-label="Reset for next delivery">
+          <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 10a6.5 6.5 0 0 1 11-4.6M16.5 10a6.5 6.5 0 0 1-11 4.6"/><path d="M13.5 4.5v3h-3"/><path d="M6.5 15.5v-3h3"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="date-line">
+      <span>Delivery date:</span>
+      <input id="deliveryDate" class="date-input" type="date" aria-label="Delivery date">
+    </div>
+    <p class="sub" id="summary"></p>
+    <div class="segments" id="segments" role="img" aria-label="Progress by step"></div>
+  </header>
+
+  <ol class="steps" id="steps"></ol>
+
+  <div class="export-row">
+    <button id="publish" class="primary" type="button">Publish to GitHub</button>
+    <button id="export" class="secondary" type="button">Export status.json</button>
+    <span id="publishStatus"></span>
+    <span id="sync"></span>
+  </div>
+
+  <details class="gh-config" id="ghConfig">
+    <summary>GitHub connection settings</summary>
+    <div class="gh-fields">
+      <label>Token
+        <input id="ghToken" type="password" placeholder="Paste fine-grained token" autocomplete="off">
+      </label>
+      <label>Owner
+        <input id="ghOwner" type="text" value="KadenceUS">
+      </label>
+      <label>Repo
+        <input id="ghRepo" type="text" value="project-guides">
+      </label>
+      <label>Branch
+        <input id="ghBranch" type="text" value="main">
+      </label>
+      <label>Path
+        <input id="ghPath" type="text" value="delivery-tracker/status.json">
+      </label>
+    </div>
+    <p class="gh-note">Stored only in this browser's local storage. Sent only to api.github.com when you click Publish.</p>
+  </details>
+</main>
+
+<script>
+(function(){
+  var PROJECT = "Mew Client";
+  var STEPS = [
+    {id:"one-off",        title:"Address DT 1-off requests"},
+    {id:"relationship-csv", title:"Prepare relationship CSV"},
+    {id:"transfer-spoof", title:"Transfer Spoof Identities metadata to Delivery Data sheet"},
+    {id:"qa-edits",       title:"Apply QA edits of video metadata in Delivery Data (Live & Spoof)"},
+    {id:"bridgette",      title:"Run validation & S3 scanning scripts"},
+    {id:"anomalies",      title:"Correct anomalies & errors"},
+    {id:"execute",        title:"Execute delivery"},
+    {id:"delivery-issues",title:"Address issues revealed during delivery"},
+    {id:"notify-client",  title:"Notify client of delivery completion & details"}
+  ];
+  var STATUSES = [
+    {id:"todo", label:"Not started",  mark:""},
+    {id:"prog", label:"In progress",  mark:"\u2022"},
+    {id:"done", label:"Complete",     mark:"\u2713"}
+  ];
+  var STATUS_BY_ID = {}; STATUSES.forEach(function(s){STATUS_BY_ID[s.id]=s;});
+  var PROG_ICON = '<svg viewBox="0 0 24 24" width="100%" height="100%"><path d="M12 2 A10 10 0 0 1 12 22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><path d="M12 22 A10 10 0 0 1 12 2" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="1.5 3.4" opacity="0.55"/></svg>';
+
+  var state = {steps:{}};
+  var els = {};
+  var $ = function(id){return document.getElementById(id);};
+  var STORAGE_KEY = "mew-delivery-draft";
+
+  function stepState(id){
+    var s = state.steps && state.steps[id];
+    return {status:(s && STATUS_BY_ID[s.status]) ? s.status : "todo", updatedAt:(s && s.updatedAt) || ""};
+  }
+
+  function build(){
+    STEPS.forEach(function(step){
+      var seg = document.createElement("div"); seg.className="seg"; $("segments").appendChild(seg);
+
+      var li = document.createElement("li"); li.className="step";
+      var node = document.createElement("span"); node.className="node"; node.setAttribute("aria-hidden","true");
+      var body = document.createElement("div"); body.className="body";
+      var row = document.createElement("div"); row.className="row";
+      var titleWrap = document.createElement("div"); titleWrap.className = "title-wrap";
+      var title = document.createElement("h2"); title.className="title"; title.textContent = step.title;
+      var sel = document.createElement("select"); sel.className="status"; sel.setAttribute("aria-label","Status: "+step.title);
+      STATUSES.forEach(function(s){
+        var o = document.createElement("option"); o.value=s.id; o.textContent=s.label; sel.appendChild(o);
+      });
+      var stamp = document.createElement("p"); stamp.className="stamp";
+
+      sel.addEventListener("change", function(){ saveStep(step.id, {status: sel.value}); });
+
+      titleWrap.appendChild(title);
+      row.appendChild(titleWrap); row.appendChild(sel);
+      body.appendChild(row); body.appendChild(stamp);
+      li.appendChild(node); li.appendChild(body);
+      $("steps").appendChild(li);
+      els[step.id] = {li:li, node:node, sel:sel, stamp:stamp, seg:seg};
+    });
+  }
+
+  function fmt(iso){
+    if(!iso) return "";
+    var d = new Date(iso); if(isNaN(d)) return "";
+    return "Updated " + d.toLocaleString([], {hour:"numeric", minute:"2-digit", timeZone:"America/New_York"}) + " ET";
+  }
+
+  function render(){
+    var counts = {done:0, prog:0, todo:0};
+    STEPS.forEach(function(step){
+      var s = stepState(step.id), e = els[step.id];
+      counts[s.status]++;
+      e.li.setAttribute("data-status", s.status);
+      e.seg.setAttribute("data-status", s.status);
+      e.seg.title = step.title + ": " + STATUS_BY_ID[s.status].label;
+      if(s.status === "prog"){ e.node.innerHTML = PROG_ICON; }
+      else { e.node.textContent = STATUS_BY_ID[s.status].mark; }
+      e.sel.setAttribute("data-status", s.status);
+      if(document.activeElement !== e.sel) e.sel.value = s.status;
+      e.stamp.textContent = fmt(s.updatedAt);
+    });
+
+    var dateInput = $("deliveryDate");
+    if(document.activeElement !== dateInput) dateInput.value = state.deliveryDate || "";
+
+    var total = STEPS.length, sum;
+    if(counts.done === total) sum = "Delivery complete";
+    else if(counts.done===0 && counts.prog===0) sum = "Not started yet";
+    else sum = counts.done + " of " + total + " steps complete";
+    $("summary").textContent = sum;
+    document.title = PROJECT + " Delivery Progress (editor)";
+  }
+
+  function clone(o){ return JSON.parse(JSON.stringify(o)); }
+
+  function saveDraft(){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+    catch(e){}
+  }
+
+  function saveStep(id, change){
+    var cur = stepState(id), next = {status:cur.status, updatedAt:new Date().toISOString()};
+    Object.keys(change).forEach(function(k){ next[k] = change[k]; });
+    if(next.status===cur.status) return;
+    var full = clone(state); full.steps = full.steps || {}; full.steps[id] = next;
+    state = full; render(); saveDraft();
+  }
+
+  function saveDeliveryDate(v){
+    if(v === (state.deliveryDate||"")) return;
+    var full = clone(state); full.deliveryDate = v; state = full; render(); saveDraft();
+  }
+
+  function resetAll(){
+    var steps = {};
+    STEPS.forEach(function(s){ steps[s.id] = {status:"todo", updatedAt:""}; });
+    state = {steps:steps, deliveryDate:""}; render(); saveDraft();
+  }
+
+  var GH_KEY = "mew-gh-config";
+  var GH_DEFAULTS = {owner:"KadenceUS", repo:"project-guides", branch:"main", path:"delivery-tracker/status.json"};
+
+  function loadGhConfig(){
+    var saved = {};
+    try{ saved = JSON.parse(localStorage.getItem(GH_KEY) || "{}"); }catch(e){}
+    return {
+      token: saved.token || "",
+      owner: saved.owner || GH_DEFAULTS.owner,
+      repo: saved.repo || GH_DEFAULTS.repo,
+      branch: saved.branch || GH_DEFAULTS.branch,
+      path: saved.path || GH_DEFAULTS.path
+    };
+  }
+
+  function saveGhConfig(cfg){
+    try{ localStorage.setItem(GH_KEY, JSON.stringify(cfg)); }catch(e){}
+  }
+
+  function utf8ToBase64(str){
+    var bytes = new TextEncoder().encode(str);
+    var binary = "";
+    for(var i=0; i<bytes.length; i++){ binary += String.fromCharCode(bytes[i]); }
+    return btoa(binary);
+  }
+
+  function setPublishStatus(text){ $("publishStatus").textContent = text; }
+
+  function publishToGithub(){
+    var cfg = {
+      token: $("ghToken").value.trim(),
+      owner: $("ghOwner").value.trim(),
+      repo: $("ghRepo").value.trim(),
+      branch: $("ghBranch").value.trim(),
+      path: $("ghPath").value.trim()
+    };
+    saveGhConfig(cfg);
+    if(!cfg.token || !cfg.owner || !cfg.repo || !cfg.path){
+      setPublishStatus("Fill in the token and repo details below first.");
+      $("ghConfig").open = true;
+      return;
+    }
+    var payload = clone(state);
+    payload.exportedAt = new Date().toISOString();
+    var content = utf8ToBase64(JSON.stringify(payload, null, 2));
+    var encodedPath = cfg.path.split("/").map(encodeURIComponent).join("/");
+    var api = "https://api.github.com/repos/" + encodeURIComponent(cfg.owner) + "/" + encodeURIComponent(cfg.repo) + "/contents/" + encodedPath;
+
+    setPublishStatus("Publishing...");
+    fetch(api + "?ref=" + encodeURIComponent(cfg.branch), {
+      headers: {"Authorization": "Bearer " + cfg.token, "Accept": "application/vnd.github+json"}
+    }).then(function(r){
+      if(r.status === 404) return null;
+      if(!r.ok) throw new Error("Could not read current file (HTTP " + r.status + ")");
+      return r.json();
+    }).then(function(existing){
+      var body = {message: "Update delivery status", content: content, branch: cfg.branch};
+      if(existing && existing.sha) body.sha = existing.sha;
+      return fetch(api, {
+        method: "PUT",
+        headers: {"Authorization": "Bearer " + cfg.token, "Accept": "application/vnd.github+json", "Content-Type": "application/json"},
+        body: JSON.stringify(body)
+      });
+    }).then(function(r){
+      if(!r.ok) return r.json().then(function(err){ throw new Error(err.message || ("HTTP " + r.status)); });
+      return r.json();
+    }).then(function(){
+      setPublishStatus("Published. Live in about a minute.");
+    }).catch(function(err){
+      setPublishStatus("Couldn't publish: " + err.message);
+    });
+  }
+
+  function exportJson(){
+    var payload = clone(state);
+    payload.exportedAt = new Date().toISOString();
+    var blob = new Blob([JSON.stringify(payload, null, 2)], {type:"application/json"});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url; a.download = "status.json";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    $("sync").textContent = "Exported. Upload status.json to your site to publish.";
+  }
+
+  try{
+    var saved = localStorage.getItem(STORAGE_KEY);
+    if(saved) state = JSON.parse(saved);
+  }catch(e){}
+
+  var ghCfg = loadGhConfig();
+  $("ghToken").value = ghCfg.token;
+  $("ghOwner").value = ghCfg.owner;
+  $("ghRepo").value = ghCfg.repo;
+  $("ghBranch").value = ghCfg.branch;
+  $("ghPath").value = ghCfg.path;
+
+  build(); render();
+
+  $("deliveryDate").addEventListener("change", function(){ saveDeliveryDate(this.value); });
+  $("export").addEventListener("click", exportJson);
+  $("publish").addEventListener("click", publishToGithub);
+
+  var armed = null;
+  $("reset").addEventListener("click", function(){
+    var b = this;
+    if(armed){ clearTimeout(armed); armed=null; b.className="icon-btn"; b.title="Reset for next delivery"; resetAll(); return; }
+    b.className = "icon-btn danger"; b.title = "Click again to clear all steps";
+    armed = setTimeout(function(){ armed=null; b.className="icon-btn"; b.title="Reset for next delivery"; }, 4000);
+  });
+})();
+</script>
+</body>
+</html>
