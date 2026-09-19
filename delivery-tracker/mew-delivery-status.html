@@ -54,8 +54,7 @@ h1{font-size:clamp(1.75rem,5vw,2.5rem);line-height:1.15;font-weight:400;letter-s
 .status-card-top .track-badge{margin-left:auto}
 .metric{display:flex;flex-direction:column;gap:.3rem}
 .metric-label{font-size:.85rem;color:var(--muted);margin:0}
-.metric-value{font-size:1.6rem;font-weight:700;color:var(--ink);margin:0;letter-spacing:-.01em}
-#targetValue{font-size:1.15rem}
+.metric-value{font-size:1.15rem;font-weight:700;color:var(--ink);margin:0;letter-spacing:-.01em}
 .metric-value .metric-unit{font-size:1rem;font-weight:400;color:var(--muted)}
 .track-badge{display:inline-flex;align-items:center;gap:.5rem;font-size:.95rem;font-weight:700;
   color:var(--track-good);background:var(--track-good-bg);border-radius:999px;padding:.5rem 1rem;white-space:nowrap}
@@ -63,9 +62,10 @@ h1{font-size:clamp(1.75rem,5vw,2.5rem);line-height:1.15;font-weight:400;letter-s
 .track-badge[hidden]{display:none}
 .track-dot{width:.5rem;height:.5rem;border-radius:50%;background:currentColor;flex:none}
 .status-card-divider{height:1px;background:var(--line);margin:1.1rem 0}
-.freshness{display:flex;align-items:center;gap:.55rem;font-size:.95rem;color:var(--ink);margin:0}
-.freshness-dot{width:.6rem;height:.6rem;border-radius:50%;background:var(--s-prog);flex:none}
+.freshness{display:flex;align-items:center;font-size:.95rem;font-weight:300;color:var(--muted);margin:.75rem 0 0}
+.freshness strong{font-weight:300;color:var(--muted)}
 .freshness-ago{color:var(--muted);margin-left:.3rem}
+.fresh-label{margin-right:.35rem}
 
 .meta-row{display:flex;align-items:center;gap:.9rem;margin:1rem 0 .25rem;font-size:.95rem;color:var(--muted);flex-wrap:wrap}
 .meta-label{color:var(--muted)}
@@ -128,8 +128,7 @@ ol.steps{list-style:none;margin:0;padding:0;position:relative}
         </div>
         <span id="trackBadge" class="track-badge"><span class="track-dot"></span><span id="trackLabel">On track</span></span>
       </div>
-      <div class="status-card-divider"></div>
-      <p class="freshness"><span class="freshness-dot"></span>Data current as of <strong id="freshTime">&mdash;</strong><span id="freshAgo" class="freshness-ago"></span></p>
+      <p class="freshness"><span class="fresh-label">Last updated</span> <strong id="freshTime">&mdash;</strong><span id="freshAgo" class="freshness-ago"></span></p>
     </div>
 
     <div id="completeBanner" class="complete-banner" hidden><svg viewBox="0 0 20 20" width="28" height="28" fill="#EAB308" aria-hidden="true"><path d="M11 2 4 12h5l-1 6 8-11h-5l1-5Z"/></svg> Delivery Complete!</div>
@@ -169,19 +168,19 @@ ol.steps{list-style:none;margin:0;padding:0;position:relative}
   function fmtStamp(iso){
     if(!iso) return "";
     var d = new Date(iso); if(isNaN(d)) return "";
-    return "Updated " + d.toLocaleString([], {hour:"numeric", minute:"2-digit", timeZone:"America/Los_Angeles"}) + " PT";
+    return "Updated " + d.toLocaleString([], {hour:"numeric", minute:"2-digit", timeZone:"America/Los_Angeles"}).replace(/\s/, "") + " PT";
   }
   function fmtDate(ymd){
     if(!ymd) return "Not set";
     var p = ymd.split("-"), d = new Date(Number(p[0]), Number(p[1])-1, Number(p[2]));
     if(isNaN(d)) return ymd;
-    return d.toLocaleDateString([], {year:"numeric", month:"2-digit", day:"2-digit"});
+    return d.toLocaleDateString([], {month:"short", day:"numeric"});
   }
   function fmtTime(hhmm){
     if(!hhmm) return "Not set";
-    var p = hhmm.split(":"), h = parseInt(p[0],10), m = p[1];
+    var p = hhmm.split(":"), h = parseInt(p[0],10);
     var ap = h >= 12 ? "PM" : "AM", h12 = h % 12; if(h12 === 0) h12 = 12;
-    return h12 + ":" + m + " " + ap + " PT";
+    return h12 + ap + " PT";
   }
   function nowPTStamp(){
     var fmt = new Intl.DateTimeFormat("en-US", {timeZone:"America/Los_Angeles", hour12:false,
@@ -269,7 +268,7 @@ ol.steps{list-style:none;margin:0;padding:0;position:relative}
 
     lastUpdateDate = latestUpdate(data && data.steps);
     $("freshTime").textContent = lastUpdateDate
-      ? lastUpdateDate.toLocaleString([], {hour:"numeric", minute:"2-digit", timeZone:"America/Los_Angeles"}) + " PT"
+      ? lastUpdateDate.toLocaleString([], {hour:"numeric", minute:"2-digit", timeZone:"America/Los_Angeles"}).replace(/\s/, "") + " PT"
       : "—";
     $("freshAgo").textContent = lastUpdateDate ? " " + agoText(lastUpdateDate) : "";
 

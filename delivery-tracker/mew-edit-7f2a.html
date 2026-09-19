@@ -54,7 +54,7 @@ h1{font-size:clamp(1.75rem,5vw,2.5rem);line-height:1.15;font-weight:400;letter-s
 .status-card-top .track-badge{margin-left:auto}
 .metric{display:flex;flex-direction:column;gap:.3rem}
 .metric-label{font-size:.85rem;color:var(--muted);margin:0}
-.metric-value{font-size:1.6rem;font-weight:700;color:var(--ink);margin:0;letter-spacing:-.01em}
+.metric-value{font-size:1.15rem;font-weight:700;color:var(--ink);margin:0;letter-spacing:-.01em}
 .metric-value .metric-unit{font-size:1rem;font-weight:400;color:var(--muted)}
 .target-controls{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
 .target-input{font:inherit;font-size:1.15rem;font-weight:700;color:var(--ink);background:transparent;border:0;
@@ -68,9 +68,10 @@ h1{font-size:clamp(1.75rem,5vw,2.5rem);line-height:1.15;font-weight:400;letter-s
 .track-badge[hidden]{display:none}
 .track-dot{width:.5rem;height:.5rem;border-radius:50%;background:currentColor;flex:none}
 .status-card-divider{height:1px;background:var(--line);margin:1.1rem 0}
-.freshness{display:flex;align-items:center;gap:.55rem;font-size:.95rem;color:var(--ink);margin:0}
-.freshness-dot{width:.6rem;height:.6rem;border-radius:50%;background:var(--s-prog);flex:none}
+.freshness{display:flex;align-items:center;font-size:.95rem;font-weight:300;color:var(--muted);margin:.75rem 0 0}
+.freshness strong{font-weight:300;color:var(--muted)}
 .freshness-ago{color:var(--muted);margin-left:.3rem}
+.fresh-label{margin-right:.35rem}
 
 .meta-row{display:flex;align-items:center;gap:1.5rem;margin:1rem 0 .25rem;font-size:.95rem;color:var(--muted);flex-wrap:wrap}
 .meta-label{color:var(--muted)}
@@ -174,8 +175,7 @@ button.primary:hover{opacity:.9}
         </div>
         <span id="trackBadge" class="track-badge"><span class="track-dot"></span><span id="trackLabel">On track</span></span>
       </div>
-      <div class="status-card-divider"></div>
-      <p class="freshness"><span class="freshness-dot"></span>Data current as of <strong id="freshTime">&mdash;</strong><span id="freshAgo" class="freshness-ago"></span></p>
+      <p class="freshness"><span class="fresh-label">Last updated</span> <strong id="freshTime">&mdash;</strong><span id="freshAgo" class="freshness-ago"></span></p>
     </div>
 
     <div id="completeBanner" class="complete-banner" hidden><svg viewBox="0 0 20 20" width="28" height="28" fill="#EAB308" aria-hidden="true"><path d="M11 2 4 12h5l-1 6 8-11h-5l1-5Z"/></svg> Delivery Complete!</div>
@@ -290,13 +290,13 @@ button.primary:hover{opacity:.9}
   function fmt(iso){
     if(!iso) return "";
     var d = new Date(iso); if(isNaN(d)) return "";
-    return "Updated " + d.toLocaleString([], {hour:"numeric", minute:"2-digit", timeZone:"America/Los_Angeles"}) + " PT";
+    return "Updated " + d.toLocaleString([], {hour:"numeric", minute:"2-digit", timeZone:"America/Los_Angeles"}).replace(/\s/, "") + " PT";
   }
   function fmtTime(hhmm){
     if(!hhmm) return "Not set";
-    var p = hhmm.split(":"), h = parseInt(p[0],10), m = p[1];
+    var p = hhmm.split(":"), h = parseInt(p[0],10);
     var ap = h >= 12 ? "PM" : "AM", h12 = h % 12; if(h12 === 0) h12 = 12;
-    return h12 + ":" + m + " " + ap + " PT";
+    return h12 + ap + " PT";
   }
   function nowPTStamp(){
     var fmt = new Intl.DateTimeFormat("en-US", {timeZone:"America/Los_Angeles", hour12:false,
@@ -372,7 +372,7 @@ button.primary:hover{opacity:.9}
 
     lastUpdateDate = latestUpdate(state.steps);
     $("freshTime").textContent = lastUpdateDate
-      ? lastUpdateDate.toLocaleString([], {hour:"numeric", minute:"2-digit", timeZone:"America/Los_Angeles"}) + " PT"
+      ? lastUpdateDate.toLocaleString([], {hour:"numeric", minute:"2-digit", timeZone:"America/Los_Angeles"}).replace(/\s/, "") + " PT"
       : "—";
     $("freshAgo").textContent = lastUpdateDate ? " " + agoText(lastUpdateDate) : "";
 
@@ -513,7 +513,7 @@ button.primary:hover{opacity:.9}
       var ap = h >= 12 ? "PM" : "AM", h12 = h % 12; if(h12 === 0) h12 = 12;
       var o = document.createElement("option");
       o.value = (h < 10 ? "0" : "") + h + ":00";
-      o.textContent = h12 + ":00 " + ap + " PT";
+      o.textContent = h12 + ap + " PT";
       sel.appendChild(o);
     }
   })();
