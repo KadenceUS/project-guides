@@ -2,15 +2,18 @@
   "steps": {
     "one-off": {
       "status": "done",
-      "updatedAt": "2026-09-19T06:00:28.752Z"
+      "updatedAt": "2026-09-19T06:15:30.341Z",
+      "by": "Hassen"
     },
     "relationship-csv": {
-      "status": "prog",
-      "updatedAt": "2026-09-19T06:00:30.681Z"
+      "status": "done",
+      "updatedAt": "2026-09-19T06:57:48.682Z",
+      "by": "Hassen"
     },
     "transfer-spoof": {
-      "status": "todo",
-      "updatedAt": ""
+      "status": "prog",
+      "updatedAt": "2026-09-19T06:57:51.511Z",
+      "by": "Hassen"
     },
     "qa-edits": {
       "status": "todo",
@@ -37,8 +40,8 @@
       "updatedAt": ""
     }
   },
-  "deliveryDate": "2026-09-22",
-  "liveSets": 133,
-  "spoofSets": 99,
-  "exportedAt": "2026-09-19T06:07:34.952Z"
+  "deliveryDate": "2026-09-21",
+  "liveSets": 105,
+  "spoofSets": 88,
+  "exportedAt": "2026-09-19T06:57:56.145Z"
 }
