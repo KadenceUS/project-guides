@@ -40,9 +40,11 @@ main{max-width:46rem;margin:0 auto;padding:3rem 1.25rem 4rem}
 .heading-row{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap-reverse;margin-bottom:.5rem}
 h1{font-size:clamp(1.75rem,5vw,2.5rem);line-height:1.15;font-weight:400;letter-spacing:-.02em;margin:0}
 .study{color:var(--ink);font-weight:800}
-.sub{color:var(--muted);margin:.6rem 0 2rem;font-size:.95rem}
+.sub{color:var(--muted);margin:.6rem 0 2rem;font-size:calc(.95rem + 6pt)}
 
-.info-line{display:flex;align-items:center;gap:.6rem;font-size:.95rem;margin:.5rem 0;flex-wrap:wrap}
+.info-row{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin:.5rem 0}
+.info-line{display:flex;align-items:center;gap:.6rem;font-size:calc(.95rem + 6pt);flex-wrap:wrap}
+.info-line.align-right{margin-left:auto;text-align:right}
 .info-label{color:var(--muted)}
 .info-value{color:var(--ink);font-weight:500}
 .sets-line{display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
@@ -94,15 +96,16 @@ ol.steps{list-style:none;margin:0;padding:0;position:relative}
       <h1><span class="study">Mew</span> Client Delivery - Live Updates</h1>
     </div>
 
-    <div class="info-line">
-      <span class="info-label">Delivery date</span>
-      <span class="info-value" id="targetValue">&mdash;</span>
-    </div>
-    <div class="info-line">
-      <span class="info-label">Sets to deliver</span>
-      <div class="sets-line">
-        <span class="meta-item"><strong id="liveSetsValue">&mdash;</strong> Live</span>
-        <span class="meta-item"><strong id="spoofSetsValue">&mdash;</strong> Spoof</span>
+    <div class="info-row">
+      <div class="info-line">
+        <span class="info-label">Sets to deliver:</span>
+        <div class="sets-line">
+          <span class="meta-item"><strong id="liveSetsValue">&mdash;</strong> Live</span>
+          <span class="meta-item"><strong id="spoofSetsValue">&mdash;</strong> Spoof</span>
+        </div>
+      </div>
+      <div class="info-line align-right">
+        <span class="info-value" id="targetValue">&mdash;</span>
       </div>
     </div>
 
