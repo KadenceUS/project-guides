@@ -2,13 +2,43 @@
   "steps": {
     "one-off": {
       "status": "done",
-      "updatedAt": "2026-09-18T18:17:07.197Z"
+      "updatedAt": "2026-09-19T06:00:28.752Z"
+    },
+    "relationship-csv": {
+      "status": "prog",
+      "updatedAt": "2026-09-19T06:00:30.681Z"
     },
     "transfer-spoof": {
-      "status": "prog",
-      "updatedAt": "2026-09-18T18:12:01.829Z"
+      "status": "todo",
+      "updatedAt": ""
+    },
+    "qa-edits": {
+      "status": "todo",
+      "updatedAt": ""
+    },
+    "bridgette": {
+      "status": "todo",
+      "updatedAt": ""
+    },
+    "anomalies": {
+      "status": "todo",
+      "updatedAt": ""
+    },
+    "execute": {
+      "status": "todo",
+      "updatedAt": ""
+    },
+    "delivery-issues": {
+      "status": "todo",
+      "updatedAt": ""
+    },
+    "notify-client": {
+      "status": "todo",
+      "updatedAt": ""
     }
   },
-  "deliveryDate": "2026-09-18",
-  "exportedAt": "2026-09-19T04:48:28.618Z"
+  "deliveryDate": "2026-09-22",
+  "liveSets": 133,
+  "spoofSets": 99,
+  "exportedAt": "2026-09-19T06:07:34.952Z"
 }
