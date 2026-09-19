@@ -1,23 +1,23 @@
 {
   "steps": {
     "one-off": {
-      "status": "prog",
-      "updatedAt": "2026-09-19T07:13:11.606Z",
+      "status": "done",
+      "updatedAt": "2026-09-19T07:19:38.567Z",
       "by": "Hassen"
     },
     "relationship-csv": {
       "status": "done",
-      "updatedAt": "2026-09-19T07:09:58.358Z",
+      "updatedAt": "2026-09-19T07:19:39.917Z",
       "by": "Hassen"
     },
     "transfer-spoof": {
-      "status": "prog",
-      "updatedAt": "2026-09-19T07:10:00.047Z",
+      "status": "done",
+      "updatedAt": "2026-09-19T07:19:41.452Z",
       "by": "Hassen"
     },
     "qa-edits": {
       "status": "prog",
-      "updatedAt": "2026-09-19T07:18:00.429Z",
+      "updatedAt": "2026-09-19T07:19:43.059Z",
       "by": "Hassen"
     },
     "bridgette": {
@@ -41,8 +41,8 @@
       "updatedAt": ""
     }
   },
-  "deliveryDate": "2026-09-22",
-  "liveSets": 199,
-  "spoofSets": 106,
-  "exportedAt": "2026-09-19T07:18:02.588Z"
+  "deliveryDate": "",
+  "liveSets": null,
+  "spoofSets": null,
+  "exportedAt": "2026-09-19T07:21:12.414Z"
 }
