@@ -258,7 +258,7 @@ button.primary:hover{opacity:.9}
 
       titleWrap.appendChild(title);
       row.appendChild(titleWrap); row.appendChild(sel);
-      body.appendChild(row); body.appendChild(stamp); body.appendChild(notes);
+      body.appendChild(row); body.appendChild(notes); body.appendChild(stamp);
       li.appendChild(node); li.appendChild(body);
       $("steps").appendChild(li);
       els[step.id] = {li:li, node:node, sel:sel, stamp:stamp, notes:notes, seg:seg};
@@ -319,7 +319,7 @@ button.primary:hover{opacity:.9}
   function saveNotes(id, value){
     var cur = stepState(id);
     if(value === cur.notes) return;
-    var next = {status:cur.status, updatedAt:cur.updatedAt, by:cur.by, notes:value};
+    var next = {status:cur.status, updatedAt:new Date().toISOString(), by:$("editorName").value.trim() || cur.by, notes:value};
     var full = clone(state); full.steps = full.steps || {}; full.steps[id] = next;
     state = full; render(); saveDraft();
   }
