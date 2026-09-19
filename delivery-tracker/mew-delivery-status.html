@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mew delivery status</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FAFAFC; --surface:#FFFFFF; --ink:#16163A; --muted:#64677E; --line:#E3E4EC;
+  --brand:#2D2A8C;
+  --s-todo:#9A9DB0;  --s-todo-bg:#EEEFF4;
+  --s-prog:#85B7EB;  --s-prog-bg:#E6F1FB;  --s-prog-light:#85B7EB;
+  --s-done:#185FA5;  --s-done-bg:#DDEAFC;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#101024; --surface:#181833; --ink:#ECECF7; --muted:#9FA2BC; --line:#2B2B4D;
+    --brand:#A5A2FF;
+    --s-todo:#8286A3; --s-todo-bg:#23233F;
+    --s-prog:#B5D4F4; --s-prog-bg:#0C447C; --s-prog-light:#B5D4F4;
+    --s-done:#378ADD; --s-done-bg:#042C53;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#101024; --surface:#181833; --ink:#ECECF7; --muted:#9FA2BC; --line:#2B2B4D;
+  --brand:#A5A2FF;
+  --s-todo:#8286A3; --s-todo-bg:#23233F;
+  --s-prog:#B5D4F4; --s-prog-bg:#0C447C; --s-prog-light:#B5D4F4;
+  --s-done:#378ADD; --s-done-bg:#042C53;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:1rem;line-height:1.5;-webkit-font-smoothing:antialiased}
+main{max-width:46rem;margin:0 auto;padding:3rem 1.25rem 4rem}
+
+/* header */
+.heading-row{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap-reverse;margin-bottom:.5rem}
+.status-line{display:flex;align-items:center;gap:.6rem;flex:none;margin-top:.3rem}
+.pub-badge{display:inline-flex;align-items:center;font-size:.8rem;font-weight:600;color:var(--muted);
+  background:var(--s-todo-bg);border-radius:999px;padding:.25rem .7rem}
+h1{font-size:clamp(1.75rem,5vw,2.5rem);line-height:1.15;font-weight:400;letter-spacing:-.02em;margin:0}
+.study{color:var(--ink);font-weight:800}
+.sub{color:var(--muted);margin:0}
+.date-line{display:flex;align-items:center;gap:.5rem;margin-top:.75rem;font-size:1.4rem;color:var(--muted)}
+.date-value{color:var(--ink);font-weight:500}
+
+/* segmented progress */
+.segments{display:grid;grid-template-columns:repeat(9,1fr);gap:4px;margin:1.75rem 0 2.5rem}
+.seg{height:10px;border-radius:2px;background:var(--s-todo-bg)}
+
+/* steps */
+ol.steps{list-style:none;margin:0;padding:0;position:relative}
+.step{display:grid;grid-template-columns:1.5rem 1fr;column-gap:1rem;position:relative;padding-bottom:1.5rem}
+.step:not(:last-child)::before{content:"";position:absolute;left:calc(.75rem - 1px);top:1.6rem;bottom:0;width:2px;background:var(--line);z-index:0}
+.node{width:1.5rem;height:1.5rem;border-radius:50%;display:grid;place-items:center;font-size:.75rem;font-weight:600;
+  position:relative;z-index:1;
+  color:var(--surface);background:var(--c);margin-top:.1rem}
+.body{min-width:0}
+.row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.5rem 1rem}
+.title{font-weight:500;font-size:1.05rem;margin:0;flex:1 1 16rem}
+.step[data-status="done"] .title{color:var(--muted)}
+.pill{font-size:.85rem;font-weight:600;color:var(--c);background:var(--cb);border-radius:999px;padding:.3rem .8rem}
+.step[data-status="prog"] .pill{color:var(--s-done);background:var(--s-done-bg)}
+.stamp{font-size:.78rem;color:var(--muted);margin:.2rem 0 0 0}
+
+[data-status="todo"]{--c:var(--s-todo);--cb:var(--s-todo-bg)}
+[data-status="prog"]{--c:var(--s-prog);--cb:var(--s-prog-bg)}
+[data-status="done"]{--c:var(--s-done);--cb:var(--s-done-bg)}
+.seg[data-status]{background:var(--c)}
+.seg[data-status="todo"]{background:var(--cb)}
+.seg[data-status="prog"]{background:var(--s-prog-light)}
+.step[data-status="prog"] .node{background:transparent;color:var(--s-prog)}
+.step[data-status="todo"] .node{background:transparent;border:1.5px solid var(--s-todo)}
+
+.err{color:var(--muted);font-size:.9rem}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="heading-row">
+      <h1><span class="study">Mew</span> Client Delivery Progress</h1>
+      <div class="status-line"><span id="pubBadge" class="pub-badge">Loading</span></div>
+    </div>
+    <div class="date-line">
+      <span>Delivery date:</span>
+      <span id="dateValue" class="date-value">&mdash;</span>
+    </div>
+    <p class="sub" id="summary"></p>
+    <div class="segments" id="segments" role="img" aria-label="Progress by step"></div>
+  </header>
+
+  <ol class="steps" id="steps"></ol>
+</main>
+
+<script>
+(function(){
+  var PROJECT = "Mew Client";
+  var STEPS = [
+    {id:"one-off",        title:"Address DT 1-off requests"},
+    {id:"relationship-csv", title:"Prepare relationship CSV"},
+    {id:"transfer-spoof", title:"Transfer Spoof Identities metadata to Delivery Data sheet"},
+    {id:"qa-edits",       title:"Apply QA edits of video metadata in Delivery Data (Live & Spoof)"},
+    {id:"bridgette",      title:"Run validation & S3 scanning scripts"},
+    {id:"anomalies",      title:"Correct anomalies & errors"},
+    {id:"execute",        title:"Execute delivery"},
+    {id:"delivery-issues",title:"Address issues revealed during delivery"},
+    {id:"notify-client",  title:"Notify client of delivery completion & details"}
+  ];
+  var STATUS_LABEL = {todo:"Not started", prog:"In progress", done:"Complete"};
+  var STATUS_MARK  = {todo:"", prog:"\u2022", done:"\u2713"};
+  var PROG_ICON = '<svg viewBox="0 0 24 24" width="100%" height="100%"><path d="M12 2 A10 10 0 0 1 12 22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><path d="M12 22 A10 10 0 0 1 12 2" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="1.5 3.4" opacity="0.55"/></svg>';
+  var $ = function(id){return document.getElementById(id);};
+
+  function fmtStamp(iso){
+    if(!iso) return "";
+    var d = new Date(iso); if(isNaN(d)) return "";
+    return "Updated " + d.toLocaleString([], {hour:"numeric", minute:"2-digit", timeZone:"America/New_York"}) + " ET";
+  }
+  function fmtDate(ymd){
+    if(!ymd) return "Not set";
+    var p = ymd.split("-"), d = new Date(Number(p[0]), Number(p[1])-1, Number(p[2]));
+    if(isNaN(d)) return ymd;
+    return d.toLocaleDateString([], {year:"numeric", month:"long", day:"numeric"});
+  }
+  function fmtPublished(iso){
+    if(!iso) return "Status";
+    var d = new Date(iso); if(isNaN(d)) return "Status";
+    return "As of " + d.toLocaleString([], {month:"short", day:"numeric", hour:"numeric", minute:"2-digit", timeZone:"America/New_York"}) + " ET";
+  }
+
+  function render(data){
+    var steps = (data && data.steps) || {};
+    var counts = {done:0, prog:0, todo:0};
+
+    var segWrap = $("segments"); segWrap.innerHTML = "";
+    var listWrap = $("steps"); listWrap.innerHTML = "";
+
+    STEPS.forEach(function(step){
+      var s = steps[step.id] || {};
+      var status = STATUS_LABEL[s.status] ? s.status : "todo";
+      counts[status]++;
+
+      var seg = document.createElement("div"); seg.className = "seg"; seg.setAttribute("data-status", status);
+      seg.title = step.title + ": " + STATUS_LABEL[status];
+      segWrap.appendChild(seg);
+
+      var li = document.createElement("li"); li.className = "step"; li.setAttribute("data-status", status);
+      var node = document.createElement("span"); node.className = "node";
+      node.innerHTML = (status === "prog") ? PROG_ICON : STATUS_MARK[status];
+      var body = document.createElement("div"); body.className = "body";
+      var row = document.createElement("div"); row.className = "row";
+      var title = document.createElement("h2"); title.className = "title"; title.textContent = step.title;
+      var pill = document.createElement("span"); pill.className = "pill"; pill.textContent = STATUS_LABEL[status];
+      var stamp = document.createElement("p"); stamp.className = "stamp"; stamp.textContent = fmtStamp(s.updatedAt);
+      row.appendChild(title); row.appendChild(pill);
+      body.appendChild(row); body.appendChild(stamp);
+      li.appendChild(node); li.appendChild(body);
+      listWrap.appendChild(li);
+    });
+
+    $("dateValue").textContent = fmtDate(data && data.deliveryDate);
+
+    var total = STEPS.length, sum;
+    if(counts.done === total) sum = "Delivery complete";
+    else if(counts.done===0 && counts.prog===0) sum = "Not started yet";
+    else sum = counts.done + " of " + total + " steps complete";
+    $("summary").textContent = sum;
+
+    $("pubBadge").textContent = fmtPublished(data && data.exportedAt);
+    document.title = PROJECT + " Delivery Progress";
+  }
+
+  fetch("status.json", {cache:"no-store"})
+    .then(function(r){ if(!r.ok) throw new Error("missing"); return r.json(); })
+    .then(render)
+    .catch(function(){
+      render(null);
+      $("pubBadge").textContent = "Not published yet";
+      $("summary").innerHTML = '<span class="err">status.json was not found next to this page yet.</span>';
+    });
+})();
+</script>
+</body>
+</html>
