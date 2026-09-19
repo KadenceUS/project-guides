@@ -1,0 +1,14 @@
+{
+  "steps": {
+    "one-off": {
+      "status": "done",
+      "updatedAt": "2026-09-18T18:17:07.197Z"
+    },
+    "transfer-spoof": {
+      "status": "prog",
+      "updatedAt": "2026-09-18T18:12:01.829Z"
+    }
+  },
+  "deliveryDate": "2026-09-18",
+  "exportedAt": "2026-09-19T04:42:14.565Z"
+}
