@@ -34,19 +34,20 @@
 body{margin:0;background:var(--bg);color:var(--ink);
   font-family:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
   font-size:1rem;line-height:1.5;-webkit-font-smoothing:antialiased}
-main{max-width:46rem;margin:0 auto;padding:3rem 1.25rem 4rem}
+main{max-width:46rem;margin:0 auto;padding:1.5rem 1.25rem 4rem}
 
 /* header */
 .heading-row{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap-reverse;margin-bottom:.5rem}
 h1{font-size:clamp(1.75rem,5vw,2.5rem);line-height:1.15;font-weight:400;letter-spacing:-.02em;margin:0}
 .study{color:var(--ink);font-weight:800}
-.sub{color:var(--muted);margin:.6rem 0 2rem;font-size:calc(.95rem + 2pt)}
+.sub{color:var(--muted);margin:.6rem 0 1.33rem;font-size:calc(.95rem + 2pt)}
 
 .info-row{display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap;margin:.5rem 0}
 .info-line{display:flex;align-items:center;gap:.6rem;font-size:calc(.95rem + 4pt);flex-wrap:wrap}
 .info-line.align-right{margin-left:auto;text-align:right}
 .info-label{color:var(--muted)}
 .info-value{color:var(--ink);font-weight:500}
+.info-value .weekday{font-weight:300}
 .sets-line{display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
 .sets-line .meta-item{color:var(--muted);display:flex;align-items:center;gap:.35rem}
 .sets-line .meta-item strong{color:var(--ink);font-weight:700}
@@ -76,6 +77,8 @@ ol.steps{list-style:none;margin:0;padding:0;position:relative}
 .pill{font-size:.85rem;font-weight:600;color:var(--c);background:var(--cb);border-radius:999px;padding:.3rem .8rem}
 .step[data-status="prog"] .pill{color:var(--s-done);background:var(--s-done-bg)}
 .stamp{font-size:.78rem;color:var(--muted);margin:.2rem 0 0 0}
+.notes{font-size:.9rem;color:var(--ink);background:var(--s-todo-bg);border-radius:8px;
+  padding:.6rem .75rem;margin:.5rem 0 0 0;white-space:pre-wrap}
 
 [data-status="todo"]{--c:var(--s-todo);--cb:var(--s-todo-bg)}
 [data-status="prog"]{--c:var(--s-prog);--cb:var(--s-prog-bg)}
@@ -147,7 +150,13 @@ ol.steps{list-style:none;margin:0;padding:0;position:relative}
     var p = ymd.split("-"), d = new Date(Number(p[0]), Number(p[1])-1, Number(p[2]));
     if(isNaN(d)) return ymd;
     var weekday = d.toLocaleDateString([], {weekday:"short"});
-    return weekday + " " + (d.getMonth()+1) + "/" + d.getDate();
+    var month = d.toLocaleDateString([], {month:"short"});
+    var day = d.getDate();
+    var suffix = "th";
+    if(day % 10 === 1 && day !== 11) suffix = "st";
+    else if(day % 10 === 2 && day !== 12) suffix = "nd";
+    else if(day % 10 === 3 && day !== 13) suffix = "rd";
+    return '<span class="weekday">' + weekday + '</span> ' + month + " " + day + suffix;
   }
   function render(data){
     var steps = (data && data.steps) || {};
@@ -175,6 +184,10 @@ ol.steps{list-style:none;margin:0;padding:0;position:relative}
       var stamp = document.createElement("p"); stamp.className = "stamp"; stamp.textContent = fmtStamp(s.updatedAt) + (s.by ? " by " + s.by : "");
       row.appendChild(title); row.appendChild(pill);
       body.appendChild(row); body.appendChild(stamp);
+      if(s.notes){
+        var notes = document.createElement("p"); notes.className = "notes"; notes.textContent = s.notes;
+        body.appendChild(notes);
+      }
       li.appendChild(node); li.appendChild(body);
       listWrap.appendChild(li);
     });
@@ -183,9 +196,9 @@ ol.steps{list-style:none;margin:0;padding:0;position:relative}
     $("spoofSetsValue").textContent = (data && data.spoofSets != null) ? data.spoofSets : "—";
 
     var total = STEPS.length;
-    $("targetValue").textContent = (data && data.deliveryDate) ? fmtDate(data.deliveryDate) : "Not set";
+    $("targetValue").innerHTML = (data && data.deliveryDate) ? fmtDate(data.deliveryDate) : "Not set";
 
-    $("summary").textContent = counts.done + " of " + total + " complete";
+    $("summary").textContent = counts.done + " of " + total + " steps complete";
     $("completeBanner").hidden = (counts.done !== total);
 
     document.title = PROJECT + " Delivery - Live Updates";

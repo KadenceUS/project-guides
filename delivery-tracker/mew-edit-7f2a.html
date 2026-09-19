@@ -34,13 +34,13 @@
 body{margin:0;background:var(--bg);color:var(--ink);
   font-family:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
   font-size:1rem;line-height:1.5;-webkit-font-smoothing:antialiased}
-main{max-width:46rem;margin:0 auto;padding:3rem 1.25rem 4rem}
+main{max-width:46rem;margin:0 auto;padding:1.5rem 1.25rem 4rem}
 
 /* header */
 .heading-row{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap-reverse;margin-bottom:.5rem}
 h1{font-size:clamp(1.75rem,5vw,2.5rem);line-height:1.15;font-weight:400;letter-spacing:-.02em;margin:0}
 .study{color:var(--ink);font-weight:800}
-.sub{color:var(--muted);margin:.6rem 0 2rem;font-size:calc(.95rem + 2pt)}
+.sub{color:var(--muted);margin:.6rem 0 1.33rem;font-size:calc(.95rem + 2pt)}
 
 .info-row{display:flex;align-items:center;justify-content:flex-start;gap:.75rem;flex-wrap:wrap;margin:.5rem 0}
 .info-line{display:flex;align-items:center;gap:.6rem;font-size:calc(.95rem + 4pt);flex-wrap:wrap}
@@ -91,6 +91,11 @@ select.status{font:inherit;font-size:.85rem;font-weight:600;color:var(--c);backg
 select.status option{color:#16163A;background:#fff;font-weight:400}
 select.status[data-status="prog"]{color:var(--s-done);background-color:var(--s-done-bg)}
 .stamp{font-size:.78rem;color:var(--muted);margin:.15rem 0 0 0}
+.notes-input{font:inherit;font-size:.85rem;color:var(--ink);background:var(--surface);
+  border:1.5px solid var(--line);border-radius:8px;padding:.5rem .65rem;margin:.5rem 0 0 0;
+  width:100%;resize:vertical;min-height:2.4rem}
+.notes-input:hover{border-color:var(--muted)}
+.notes-input:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px var(--s-prog-bg)}
 :focus-visible{outline:2px solid var(--brand);outline-offset:2px}
 
 [data-status="todo"]{--c:var(--s-todo);--cb:var(--s-todo-bg)}
@@ -227,7 +232,7 @@ button.primary:hover{opacity:.9}
 
   function stepState(id){
     var s = state.steps && state.steps[id];
-    return {status:(s && STATUS_BY_ID[s.status]) ? s.status : "todo", updatedAt:(s && s.updatedAt) || "", by:(s && s.by) || ""};
+    return {status:(s && STATUS_BY_ID[s.status]) ? s.status : "todo", updatedAt:(s && s.updatedAt) || "", by:(s && s.by) || "", notes:(s && s.notes) || ""};
   }
 
   function build(){
@@ -245,15 +250,18 @@ button.primary:hover{opacity:.9}
         var o = document.createElement("option"); o.value=s.id; o.textContent=s.label; sel.appendChild(o);
       });
       var stamp = document.createElement("p"); stamp.className="stamp";
+      var notes = document.createElement("textarea"); notes.className="notes-input"; notes.rows=2;
+      notes.placeholder = "Add notes\u2026"; notes.setAttribute("aria-label", "Notes: "+step.title);
 
       sel.addEventListener("change", function(){ saveStep(step.id, {status: sel.value}); });
+      notes.addEventListener("change", function(){ saveNotes(step.id, notes.value); });
 
       titleWrap.appendChild(title);
       row.appendChild(titleWrap); row.appendChild(sel);
-      body.appendChild(row); body.appendChild(stamp);
+      body.appendChild(row); body.appendChild(stamp); body.appendChild(notes);
       li.appendChild(node); li.appendChild(body);
       $("steps").appendChild(li);
-      els[step.id] = {li:li, node:node, sel:sel, stamp:stamp, seg:seg};
+      els[step.id] = {li:li, node:node, sel:sel, stamp:stamp, notes:notes, seg:seg};
     });
   }
 
@@ -276,6 +284,7 @@ button.primary:hover{opacity:.9}
       e.sel.setAttribute("data-status", s.status);
       if(document.activeElement !== e.sel) e.sel.value = s.status;
       e.stamp.textContent = fmt(s.updatedAt) + (s.by ? " by " + s.by : "");
+      if(document.activeElement !== e.notes) e.notes.value = s.notes || "";
     });
 
     var dateInput = $("deliveryDate");
@@ -286,7 +295,7 @@ button.primary:hover{opacity:.9}
     if(document.activeElement !== spoofInput) spoofInput.value = (state.spoofSets != null) ? state.spoofSets : "";
 
     var total = STEPS.length;
-    $("summary").textContent = counts.done + " of " + total + " complete";
+    $("summary").textContent = counts.done + " of " + total + " steps complete";
     $("completeBanner").hidden = (counts.done !== total);
 
     document.title = PROJECT + " Delivery - Live Updates (editor)";
@@ -300,9 +309,17 @@ button.primary:hover{opacity:.9}
   }
 
   function saveStep(id, change){
-    var cur = stepState(id), next = {status:cur.status, updatedAt:new Date().toISOString(), by:$("editorName").value.trim() || cur.by};
+    var cur = stepState(id), next = {status:cur.status, updatedAt:new Date().toISOString(), by:$("editorName").value.trim() || cur.by, notes:cur.notes};
     Object.keys(change).forEach(function(k){ next[k] = change[k]; });
     if(next.status===cur.status) return;
+    var full = clone(state); full.steps = full.steps || {}; full.steps[id] = next;
+    state = full; render(); saveDraft();
+  }
+
+  function saveNotes(id, value){
+    var cur = stepState(id);
+    if(value === cur.notes) return;
+    var next = {status:cur.status, updatedAt:cur.updatedAt, by:cur.by, notes:value};
     var full = clone(state); full.steps = full.steps || {}; full.steps[id] = next;
     state = full; render(); saveDraft();
   }
