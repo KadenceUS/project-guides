@@ -124,7 +124,7 @@ ol.steps{list-style:none;margin:0;padding:0;position:relative}
     if(!ymd) return "Not set";
     var p = ymd.split("-"), d = new Date(Number(p[0]), Number(p[1])-1, Number(p[2]));
     if(isNaN(d)) return ymd;
-    return d.toLocaleDateString([], {year:"numeric", month:"long", day:"numeric"});
+    return d.toLocaleDateString([], {year:"numeric", month:"2-digit", day:"2-digit"});
   }
 
   function render(data){
