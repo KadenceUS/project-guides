@@ -174,7 +174,8 @@ ol.steps{list-style:none;margin:0;padding:0;position:relative}
     if(!ymd) return "Not set";
     var p = ymd.split("-"), d = new Date(Number(p[0]), Number(p[1])-1, Number(p[2]));
     if(isNaN(d)) return ymd;
-    return d.toLocaleDateString([], {month:"short", day:"numeric"});
+    var weekday = d.toLocaleDateString([], {weekday:"short"});
+    return weekday + " " + (d.getMonth()+1) + "/" + d.getDate();
   }
   function fmtTime(hhmm){
     if(!hhmm) return "Not set";
