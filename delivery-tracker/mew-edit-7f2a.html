@@ -41,12 +41,12 @@ main{max-width:46rem;margin:0 auto;padding:3rem 1.25rem 4rem}
 h1{font-size:clamp(1.75rem,5vw,2.5rem);line-height:1.15;font-weight:400;letter-spacing:-.02em;margin:0}
 .study{color:var(--ink);font-weight:800}
 .sub{color:var(--muted);margin:0}
-.date-line{display:flex;align-items:center;gap:.5rem;margin-top:.75rem;font-size:1.4rem;color:var(--muted)}
+.info-row{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-top:.75rem;flex-wrap:wrap}
 .date-input{font:inherit;font-size:1.4rem;color:var(--ink);background:transparent;border:0;
-  border-bottom:1px dashed transparent;padding:.1rem 0}
+  border-bottom:1px dashed transparent;padding:.1rem 0;text-align:right;margin-left:auto}
 .date-input:hover{border-bottom-color:var(--line)}
 .date-input:focus{outline:none;border-bottom-color:var(--brand);color:var(--ink)}
-.sets-line{display:flex;align-items:center;gap:1.5rem;margin:.75rem 0;font-size:.95rem;color:var(--muted)}
+.sets-line{display:flex;align-items:center;gap:1.5rem;font-size:.95rem;color:var(--muted)}
 .sets-line label{display:flex;align-items:center;gap:.6rem}
 .sets-input{font:inherit;font-size:.95rem;font-weight:400;color:var(--ink);background:var(--surface);
   border:1.5px solid var(--line);border-radius:6px;padding:.3rem .5rem;width:4.5rem}
@@ -126,13 +126,12 @@ button.primary:hover{opacity:.9}
         </button>
       </div>
     </div>
-    <div class="date-line">
-      <span>Delivery date:</span>
+    <div class="info-row">
+      <div class="sets-line">
+        <label>Live sets <input id="liveSets" class="sets-input" type="number" min="0" step="1" inputmode="numeric" aria-label="Live sets"></label>
+        <label>Spoof sets <input id="spoofSets" class="sets-input" type="number" min="0" step="1" inputmode="numeric" aria-label="Spoof sets"></label>
+      </div>
       <input id="deliveryDate" class="date-input" type="date" aria-label="Delivery date">
-    </div>
-    <div class="sets-line">
-      <label>Live sets <input id="liveSets" class="sets-input" type="number" min="0" step="1" inputmode="numeric" aria-label="Live sets"></label>
-      <label>Spoof sets <input id="spoofSets" class="sets-input" type="number" min="0" step="1" inputmode="numeric" aria-label="Spoof sets"></label>
     </div>
     <p class="sub" id="summary"></p>
     <div class="segments" id="segments" role="img" aria-label="Progress by step"></div>

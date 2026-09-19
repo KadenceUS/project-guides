@@ -41,9 +41,9 @@ main{max-width:46rem;margin:0 auto;padding:1.5rem 1.25rem 4rem}
 h1{font-size:clamp(1.75rem,5vw,2.5rem);line-height:1.15;font-weight:400;letter-spacing:-.02em;margin:0}
 .study{color:var(--ink);font-weight:800}
 .sub{color:var(--muted);margin:0}
-.date-line{display:flex;align-items:center;gap:.5rem;margin-top:.75rem;font-size:1.4rem;color:var(--muted)}
-.date-value{color:var(--ink);font-weight:500}
-.sets-line{display:flex;align-items:center;gap:1.5rem;margin:.6rem 0;font-size:.95rem;color:var(--muted)}
+.info-row{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-top:.75rem;flex-wrap:wrap}
+.date-value{color:var(--ink);font-weight:500;font-size:1.4rem;margin-left:auto}
+.sets-line{display:flex;align-items:center;gap:1.5rem;font-size:.95rem;color:var(--muted)}
 .sets-line strong{color:var(--ink);font-weight:600}
 
 /* segmented progress */
@@ -82,13 +82,12 @@ ol.steps{list-style:none;margin:0;padding:0;position:relative}
     <div class="heading-row">
       <h1><span class="study">Mew</span> Client Delivery - Live Updates</h1>
     </div>
-    <div class="date-line">
-      <span>Delivery date:</span>
+    <div class="info-row">
+      <div class="sets-line">
+        <span>Live sets: <strong id="liveSetsValue">&mdash;</strong></span>
+        <span>Spoof sets: <strong id="spoofSetsValue">&mdash;</strong></span>
+      </div>
       <span id="dateValue" class="date-value">&mdash;</span>
-    </div>
-    <div class="sets-line">
-      <span>Live sets: <strong id="liveSetsValue">&mdash;</strong></span>
-      <span>Spoof sets: <strong id="spoofSetsValue">&mdash;</strong></span>
     </div>
     <p class="sub" id="summary"></p>
     <div class="segments" id="segments" role="img" aria-label="Progress by step"></div>
@@ -151,7 +150,7 @@ ol.steps{list-style:none;margin:0;padding:0;position:relative}
       var row = document.createElement("div"); row.className = "row";
       var title = document.createElement("h2"); title.className = "title"; title.textContent = step.title;
       var pill = document.createElement("span"); pill.className = "pill"; pill.textContent = STATUS_LABEL[status];
-      var stamp = document.createElement("p"); stamp.className = "stamp"; stamp.textContent = fmtStamp(s.updatedAt) + (s.by ? " \u00b7 by " + s.by : "");
+      var stamp = document.createElement("p"); stamp.className = "stamp"; stamp.textContent = fmtStamp(s.updatedAt) + (s.by ? " by " + s.by : "");
       row.appendChild(title); row.appendChild(pill);
       body.appendChild(row); body.appendChild(stamp);
       li.appendChild(node); li.appendChild(body);
