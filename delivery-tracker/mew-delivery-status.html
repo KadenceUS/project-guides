@@ -34,18 +34,17 @@
 body{margin:0;background:var(--bg);color:var(--ink);
   font-family:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
   font-size:1rem;line-height:1.5;-webkit-font-smoothing:antialiased}
-main{max-width:46rem;margin:0 auto;padding:3rem 1.25rem 4rem}
+main{max-width:46rem;margin:0 auto;padding:1.5rem 1.25rem 4rem}
 
 /* header */
 .heading-row{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap-reverse;margin-bottom:.5rem}
-.status-line{display:flex;align-items:center;gap:.6rem;flex:none;margin-top:.3rem}
-.pub-badge{display:inline-flex;align-items:center;font-size:.8rem;font-weight:600;color:var(--muted);
-  background:var(--s-todo-bg);border-radius:999px;padding:.25rem .7rem}
 h1{font-size:clamp(1.75rem,5vw,2.5rem);line-height:1.15;font-weight:400;letter-spacing:-.02em;margin:0}
 .study{color:var(--ink);font-weight:800}
 .sub{color:var(--muted);margin:0}
 .date-line{display:flex;align-items:center;gap:.5rem;margin-top:.75rem;font-size:1.4rem;color:var(--muted)}
 .date-value{color:var(--ink);font-weight:500}
+.sets-line{display:flex;align-items:center;gap:1.5rem;margin-top:.6rem;font-size:.95rem;color:var(--muted)}
+.sets-line strong{color:var(--ink);font-weight:600}
 
 /* segmented progress */
 .segments{display:grid;grid-template-columns:repeat(9,1fr);gap:4px;margin:1.75rem 0 2.5rem}
@@ -75,7 +74,6 @@ ol.steps{list-style:none;margin:0;padding:0;position:relative}
 .step[data-status="prog"] .node{background:transparent;color:var(--s-prog)}
 .step[data-status="todo"] .node{background:transparent;border:1.5px solid var(--s-todo)}
 
-.err{color:var(--muted);font-size:.9rem}
 </style>
 </head>
 <body>
@@ -83,11 +81,14 @@ ol.steps{list-style:none;margin:0;padding:0;position:relative}
   <header>
     <div class="heading-row">
       <h1><span class="study">Mew</span> Client Delivery Progress</h1>
-      <div class="status-line"><span id="pubBadge" class="pub-badge">Loading</span></div>
     </div>
     <div class="date-line">
       <span>Delivery date:</span>
       <span id="dateValue" class="date-value">&mdash;</span>
+    </div>
+    <div class="sets-line">
+      <span>Live sets: <strong id="liveSetsValue">&mdash;</strong></span>
+      <span>Spoof sets: <strong id="spoofSetsValue">&mdash;</strong></span>
     </div>
     <p class="sub" id="summary"></p>
     <div class="segments" id="segments" role="img" aria-label="Progress by step"></div>
@@ -126,11 +127,6 @@ ol.steps{list-style:none;margin:0;padding:0;position:relative}
     if(isNaN(d)) return ymd;
     return d.toLocaleDateString([], {year:"numeric", month:"long", day:"numeric"});
   }
-  function fmtPublished(iso){
-    if(!iso) return "Status";
-    var d = new Date(iso); if(isNaN(d)) return "Status";
-    return "As of " + d.toLocaleString([], {month:"short", day:"numeric", hour:"numeric", minute:"2-digit", timeZone:"America/New_York"}) + " ET";
-  }
 
   function render(data){
     var steps = (data && data.steps) || {};
@@ -163,14 +159,14 @@ ol.steps{list-style:none;margin:0;padding:0;position:relative}
     });
 
     $("dateValue").textContent = fmtDate(data && data.deliveryDate);
+    $("liveSetsValue").textContent = (data && data.liveSets != null) ? data.liveSets : "—";
+    $("spoofSetsValue").textContent = (data && data.spoofSets != null) ? data.spoofSets : "—";
 
     var total = STEPS.length, sum;
     if(counts.done === total) sum = "Delivery complete";
     else if(counts.done===0 && counts.prog===0) sum = "Not started yet";
     else sum = counts.done + " of " + total + " steps complete";
     $("summary").textContent = sum;
-
-    $("pubBadge").textContent = fmtPublished(data && data.exportedAt);
     document.title = PROJECT + " Delivery Progress";
   }
 
@@ -179,8 +175,6 @@ ol.steps{list-style:none;margin:0;padding:0;position:relative}
     .then(render)
     .catch(function(){
       render(null);
-      $("pubBadge").textContent = "Not published yet";
-      $("summary").innerHTML = '<span class="err">status.json was not found next to this page yet.</span>';
     });
 })();
 </script>

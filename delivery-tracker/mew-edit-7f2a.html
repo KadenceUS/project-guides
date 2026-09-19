@@ -49,6 +49,12 @@ h1{font-size:clamp(1.75rem,5vw,2.5rem);line-height:1.15;font-weight:400;letter-s
   border-bottom:1px dashed transparent;padding:.1rem 0}
 .date-input:hover{border-bottom-color:var(--line)}
 .date-input:focus{outline:none;border-bottom-color:var(--brand);color:var(--ink)}
+.sets-line{display:flex;align-items:center;gap:1.5rem;margin-top:.75rem;font-size:.95rem;color:var(--muted)}
+.sets-line label{display:flex;align-items:center;gap:.6rem}
+.sets-input{font:inherit;font-size:.95rem;font-weight:600;color:var(--ink);background:var(--surface);
+  border:1.5px solid var(--line);border-radius:6px;padding:.3rem .5rem;width:4.5rem}
+.sets-input:hover{border-color:var(--muted)}
+.sets-input:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px var(--s-prog-bg)}
 
 /* segmented progress */
 .segments{display:grid;grid-template-columns:repeat(9,1fr);gap:4px;margin:1.75rem 0 2.5rem}
@@ -125,6 +131,10 @@ button.secondary:hover{border-color:var(--muted)}
     <div class="date-line">
       <span>Delivery date:</span>
       <input id="deliveryDate" class="date-input" type="date" aria-label="Delivery date">
+    </div>
+    <div class="sets-line">
+      <label>Live sets <input id="liveSets" class="sets-input" type="number" min="0" step="1" inputmode="numeric" aria-label="Live sets"></label>
+      <label>Spoof sets <input id="spoofSets" class="sets-input" type="number" min="0" step="1" inputmode="numeric" aria-label="Spoof sets"></label>
     </div>
     <p class="sub" id="summary"></p>
     <div class="segments" id="segments" role="img" aria-label="Progress by step"></div>
@@ -245,6 +255,10 @@ button.secondary:hover{border-color:var(--muted)}
     var dateInput = $("deliveryDate");
     if(document.activeElement !== dateInput) dateInput.value = state.deliveryDate || "";
 
+    var liveInput = $("liveSets"), spoofInput = $("spoofSets");
+    if(document.activeElement !== liveInput) liveInput.value = (state.liveSets != null) ? state.liveSets : "";
+    if(document.activeElement !== spoofInput) spoofInput.value = (state.spoofSets != null) ? state.spoofSets : "";
+
     var total = STEPS.length, sum;
     if(counts.done === total) sum = "Delivery complete";
     else if(counts.done===0 && counts.prog===0) sum = "Not started yet";
@@ -273,10 +287,16 @@ button.secondary:hover{border-color:var(--muted)}
     var full = clone(state); full.deliveryDate = v; state = full; render(); saveDraft();
   }
 
+  function saveSets(field, v){
+    var n = v === "" ? null : Math.max(0, parseInt(v, 10) || 0);
+    if(n === (state[field] != null ? state[field] : null)) return;
+    var full = clone(state); full[field] = n; state = full; render(); saveDraft();
+  }
+
   function resetAll(){
     var steps = {};
     STEPS.forEach(function(s){ steps[s.id] = {status:"todo", updatedAt:""}; });
-    state = {steps:steps, deliveryDate:""}; render(); saveDraft();
+    state = {steps:steps, deliveryDate:"", liveSets:null, spoofSets:null}; render(); saveDraft();
   }
 
   var GH_KEY = "mew-gh-config";
@@ -379,6 +399,8 @@ button.secondary:hover{border-color:var(--muted)}
   build(); render();
 
   $("deliveryDate").addEventListener("change", function(){ saveDeliveryDate(this.value); });
+  $("liveSets").addEventListener("change", function(){ saveSets("liveSets", this.value); });
+  $("spoofSets").addEventListener("change", function(){ saveSets("spoofSets", this.value); });
   $("export").addEventListener("click", exportJson);
   $("publish").addEventListener("click", publishToGithub);
 
