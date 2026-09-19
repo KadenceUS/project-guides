@@ -1,8 +1,9 @@
 {
   "steps": {
     "one-off": {
-      "status": "todo",
-      "updatedAt": ""
+      "status": "done",
+      "updatedAt": "2026-09-19T21:06:32.603Z",
+      "by": "Bridgette"
     },
     "relationship-csv": {
       "status": "prog",
@@ -10,8 +11,9 @@
       "by": "Bridgette"
     },
     "transfer-spoof": {
-      "status": "todo",
-      "updatedAt": ""
+      "status": "prog",
+      "updatedAt": "2026-09-19T21:06:33.811Z",
+      "by": "Bridgette"
     },
     "qa-edits": {
       "status": "todo",
@@ -42,5 +44,5 @@
   "liveSets": 240,
   "spoofSets": 155,
   "targetDelivery": "08:00",
-  "exportedAt": "2026-09-19T20:12:33.482Z"
+  "exportedAt": "2026-09-19T21:06:35.731Z"
 }
