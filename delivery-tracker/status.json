@@ -1,29 +1,25 @@
 {
   "steps": {
     "one-off": {
-      "status": "done",
-      "updatedAt": "2026-09-19T07:19:38.567Z",
-      "by": "Hassen"
+      "status": "todo",
+      "updatedAt": ""
     },
     "relationship-csv": {
-      "status": "done",
-      "updatedAt": "2026-09-19T07:19:39.917Z",
-      "by": "Hassen"
+      "status": "prog",
+      "updatedAt": "2026-09-19T20:12:21.836Z",
+      "by": "Bridgette"
     },
     "transfer-spoof": {
-      "status": "done",
-      "updatedAt": "2026-09-19T07:19:41.452Z",
-      "by": "Hassen"
+      "status": "todo",
+      "updatedAt": ""
     },
     "qa-edits": {
-      "status": "done",
-      "updatedAt": "2026-09-19T07:22:08.310Z",
-      "by": "Bridgette"
+      "status": "todo",
+      "updatedAt": ""
     },
     "bridgette": {
-      "status": "prog",
-      "updatedAt": "2026-09-19T07:22:10.877Z",
-      "by": "Bridgette"
+      "status": "todo",
+      "updatedAt": ""
     },
     "anomalies": {
       "status": "todo",
@@ -43,7 +39,8 @@
     }
   },
   "deliveryDate": "2026-09-22",
-  "liveSets": 495,
-  "spoofSets": 127,
-  "exportedAt": "2026-09-19T07:23:37.778Z"
+  "liveSets": 240,
+  "spoofSets": 155,
+  "targetDelivery": "08:00",
+  "exportedAt": "2026-09-19T20:12:33.482Z"
 }
