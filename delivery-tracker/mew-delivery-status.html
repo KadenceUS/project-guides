@@ -80,7 +80,7 @@ ol.steps{list-style:none;margin:0;padding:0;position:relative}
 <main>
   <header>
     <div class="heading-row">
-      <h1><span class="study">Mew</span> Client Delivery Progress</h1>
+      <h1><span class="study">Mew</span> Client Delivery - Live Updates</h1>
     </div>
     <div class="date-line">
       <span>Delivery date:</span>
@@ -151,7 +151,7 @@ ol.steps{list-style:none;margin:0;padding:0;position:relative}
       var row = document.createElement("div"); row.className = "row";
       var title = document.createElement("h2"); title.className = "title"; title.textContent = step.title;
       var pill = document.createElement("span"); pill.className = "pill"; pill.textContent = STATUS_LABEL[status];
-      var stamp = document.createElement("p"); stamp.className = "stamp"; stamp.textContent = fmtStamp(s.updatedAt);
+      var stamp = document.createElement("p"); stamp.className = "stamp"; stamp.textContent = fmtStamp(s.updatedAt) + (s.by ? " \u00b7 by " + s.by : "");
       row.appendChild(title); row.appendChild(pill);
       body.appendChild(row); body.appendChild(stamp);
       li.appendChild(node); li.appendChild(body);
@@ -167,7 +167,7 @@ ol.steps{list-style:none;margin:0;padding:0;position:relative}
     else if(counts.done===0 && counts.prog===0) sum = "Not started yet";
     else sum = counts.done + " of " + total + " steps complete";
     $("summary").textContent = sum;
-    document.title = PROJECT + " Delivery Progress";
+    document.title = PROJECT + " Delivery - Live Updates";
   }
 
   fetch("status.json", {cache:"no-store"})
