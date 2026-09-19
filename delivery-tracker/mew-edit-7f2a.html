@@ -73,6 +73,7 @@ h1{font-size:clamp(1.75rem,5vw,2.5rem);line-height:1.15;font-weight:400;letter-s
 .freshness-ago{color:var(--muted);margin-left:.3rem}
 
 .meta-row{display:flex;align-items:center;gap:1.5rem;margin:1rem 0 .25rem;font-size:.95rem;color:var(--muted);flex-wrap:wrap}
+.meta-label{color:var(--muted)}
 .meta-row label{display:flex;align-items:center;gap:.6rem}
 .complete-banner{display:flex;align-items:center;justify-content:center;gap:.5rem;font-size:1.72rem;font-weight:700;
   color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:10px;
@@ -180,6 +181,7 @@ button.primary:hover{opacity:.9}
     <div id="completeBanner" class="complete-banner" hidden><svg viewBox="0 0 20 20" width="28" height="28" fill="#EAB308" aria-hidden="true"><path d="M11 2 4 12h5l-1 6 8-11h-5l1-5Z"/></svg> Delivery Complete!</div>
 
     <div class="meta-row">
+      <span class="meta-label">Sets to deliver</span>
       <label>Live sets <input id="liveSets" class="sets-input" type="number" min="0" step="1" inputmode="numeric" aria-label="Live sets"></label>
       <label>Spoof sets <input id="spoofSets" class="sets-input" type="number" min="0" step="1" inputmode="numeric" aria-label="Spoof sets"></label>
     </div>
