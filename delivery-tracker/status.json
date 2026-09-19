@@ -1,12 +1,14 @@
 {
   "steps": {
     "one-off": {
-      "status": "todo",
-      "updatedAt": ""
+      "status": "done",
+      "updatedAt": "2026-09-19T07:02:58.460Z",
+      "by": "Hassen"
     },
     "relationship-csv": {
-      "status": "todo",
-      "updatedAt": ""
+      "status": "prog",
+      "updatedAt": "2026-09-19T07:03:02.345Z",
+      "by": "Hassen"
     },
     "transfer-spoof": {
       "status": "todo",
@@ -39,6 +41,6 @@
   },
   "deliveryDate": "2026-09-22",
   "liveSets": 108,
-  "spoofSets": 56,
-  "exportedAt": "2026-09-19T06:59:22.491Z"
+  "spoofSets": 76,
+  "exportedAt": "2026-09-19T07:03:22.639Z"
 }
