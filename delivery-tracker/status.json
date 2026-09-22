@@ -2,9 +2,9 @@
   "steps": {
     "one-off": {
       "status": "prog",
-      "updatedAt": "2026-09-22T16:39:07.589Z",
+      "updatedAt": "2026-09-22T16:41:45.591Z",
       "by": "Hassen",
-      "notes": "Remaining items related to 9/10 - 9/13 data being addressed"
+      "notes": "Remaining items related to 9/10 - 9/13 S3 files being addressed"
     },
     "s3-scan": {
       "status": "todo",
@@ -48,5 +48,5 @@
   "deliveryDate": "2026-09-23",
   "liveSets": 248,
   "spoofSets": 151,
-  "exportedAt": "2026-09-22T16:40:20.098Z"
+  "exportedAt": "2026-09-22T16:41:45.678Z"
 }
