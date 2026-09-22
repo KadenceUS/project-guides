@@ -8,9 +8,9 @@
     },
     "s3-scan": {
       "status": "done",
-      "updatedAt": "2026-09-22T23:48:40.765Z",
+      "updatedAt": "2026-09-22T23:55:48.081Z",
       "by": "Bridgette",
-      "notes": ""
+      "notes": "Includes data from DC dates 9/10 and 9/11. I'll either add 9/12 and 9/13 to this delivery or save them for tomorrow's."
     },
     "transfer-spoof": {
       "status": "done",
@@ -54,5 +54,5 @@
   "deliveryDate": "2026-09-22",
   "liveSets": 115,
   "spoofSets": 110,
-  "exportedAt": "2026-09-22T23:53:29.380Z"
+  "exportedAt": "2026-09-22T23:55:50.853Z"
 }
