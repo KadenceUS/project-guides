@@ -72,6 +72,8 @@ h1{font-size:clamp(1.75rem,5vw,2.5rem);line-height:1.15;font-weight:400;letter-s
 
 /* steps */
 ol.steps{list-style:none;margin:0;padding:0;position:relative}
+.section-title{font-size:1.05rem;font-weight:700;color:var(--ink);margin:1.75rem 0 .75rem}
+.section-title:first-child{margin-top:0}
 .step{display:grid;grid-template-columns:1.5rem 1fr;column-gap:1rem;position:relative;padding-bottom:1.5rem}
 .step:not(:last-child)::before{content:"";position:absolute;left:calc(.75rem - 1px);top:1.6rem;bottom:0;width:2px;background:var(--line);z-index:0}
 .node{width:1.5rem;height:1.5rem;border-radius:50%;display:grid;place-items:center;font-size:.75rem;font-weight:600;
@@ -172,7 +174,7 @@ button.primary:hover{opacity:.9}
     </select>
   </div>
 
-  <ol class="steps" id="steps"></ol>
+  <div id="stepsWrap"></div>
 
   <div class="export-row">
     <button id="publish" class="primary" type="button">Push update</button>
@@ -206,15 +208,16 @@ button.primary:hover{opacity:.9}
 (function(){
   var PROJECT = "Mew Client";
   var STEPS = [
-    {id:"one-off",        title:"Address DT 1-off requests"},
-    {id:"relationship-csv", title:"Prepare relationship CSV"},
-    {id:"transfer-spoof", title:"Transfer Spoof Identities metadata to Delivery Data sheet"},
-    {id:"qa-edits",       title:"Apply QA edits of video metadata in Delivery Data (Live & Spoof)"},
-    {id:"bridgette",      title:"Run validation & S3 scanning scripts"},
-    {id:"anomalies",      title:"Correct anomalies & errors"},
-    {id:"execute",        title:"Execute delivery"},
-    {id:"delivery-issues",title:"Address issues revealed during delivery"},
-    {id:"notify-client",  title:"Notify client of delivery completion & details"}
+    {id:"one-off",        title:"Address DT 1-off requests", section:"Data Prep"},
+    {id:"s3-scan",        title:"Run S3 scanning scripts", section:"Data Prep"},
+    {id:"transfer-spoof", title:"Transfer Spoof Identities metadata to Delivery Data sheet", section:"Data Prep"},
+    {id:"relationship-csv", title:"Prepare relationship CSV", section:"Delivery"},
+    {id:"qa-edits",       title:"Apply QA edits of video metadata in Delivery Data (Live & Spoof)", section:"Delivery"},
+    {id:"bridgette",      title:"Run metadata schema validation scripts", section:"Delivery"},
+    {id:"anomalies",      title:"Correct anomalies & errors", section:"Delivery"},
+    {id:"execute",        title:"Execute delivery", section:"Delivery"},
+    {id:"delivery-issues",title:"Address issues revealed during delivery", section:"Delivery"},
+    {id:"notify-client",  title:"Notify client of delivery completion & details", section:"Delivery"}
   ];
   var STATUSES = [
     {id:"todo", label:"Not started",  mark:""},
@@ -236,15 +239,26 @@ button.primary:hover{opacity:.9}
   }
 
   function build(){
+    $("segments").style.gridTemplateColumns = "repeat(" + STEPS.length + ",1fr)";
+    var wrap = $("stepsWrap");
+    var currentOl = null, lastSection = null;
     STEPS.forEach(function(step){
       var seg = document.createElement("div"); seg.className="seg"; $("segments").appendChild(seg);
+
+      if(step.section !== lastSection){
+        var heading = document.createElement("h2"); heading.className = "section-title"; heading.textContent = step.section;
+        wrap.appendChild(heading);
+        currentOl = document.createElement("ol"); currentOl.className = "steps";
+        wrap.appendChild(currentOl);
+        lastSection = step.section;
+      }
 
       var li = document.createElement("li"); li.className="step";
       var node = document.createElement("span"); node.className="node"; node.setAttribute("aria-hidden","true");
       var body = document.createElement("div"); body.className="body";
       var row = document.createElement("div"); row.className="row";
       var titleWrap = document.createElement("div"); titleWrap.className = "title-wrap";
-      var title = document.createElement("h2"); title.className="title"; title.textContent = step.title;
+      var title = document.createElement("h3"); title.className="title"; title.textContent = step.title;
       var sel = document.createElement("select"); sel.className="status"; sel.setAttribute("aria-label","Status: "+step.title);
       STATUSES.forEach(function(s){
         var o = document.createElement("option"); o.value=s.id; o.textContent=s.label; sel.appendChild(o);
@@ -260,7 +274,7 @@ button.primary:hover{opacity:.9}
       row.appendChild(titleWrap); row.appendChild(sel);
       body.appendChild(row); body.appendChild(notes); body.appendChild(stamp);
       li.appendChild(node); li.appendChild(body);
-      $("steps").appendChild(li);
+      currentOl.appendChild(li);
       els[step.id] = {li:li, node:node, sel:sel, stamp:stamp, notes:notes, seg:seg};
     });
   }

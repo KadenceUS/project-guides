@@ -65,6 +65,8 @@ h1{font-size:clamp(1.75rem,5vw,2.5rem);line-height:1.15;font-weight:400;letter-s
 
 /* steps */
 ol.steps{list-style:none;margin:0;padding:0;position:relative}
+.section-title{font-size:1.05rem;font-weight:700;color:var(--ink);margin:1.75rem 0 .75rem}
+.section-title:first-child{margin-top:0}
 .step{display:grid;grid-template-columns:1.5rem 1fr;column-gap:1rem;position:relative;padding-bottom:1.5rem}
 .step:not(:last-child)::before{content:"";position:absolute;left:calc(.75rem - 1px);top:1.6rem;bottom:0;width:2px;background:var(--line);z-index:0}
 .node{width:1.5rem;height:1.5rem;border-radius:50%;display:grid;place-items:center;font-size:.75rem;font-weight:600;
@@ -117,22 +119,23 @@ ol.steps{list-style:none;margin:0;padding:0;position:relative}
     <div id="completeBanner" class="complete-banner" hidden><svg viewBox="0 0 20 20" width="28" height="28" fill="#EAB308" aria-hidden="true"><path d="M11 2 4 12h5l-1 6 8-11h-5l1-5Z"/></svg> Delivery Complete!</div>
   </header>
 
-  <ol class="steps" id="steps"></ol>
+  <div id="stepsWrap"></div>
 </main>
 
 <script>
 (function(){
   var PROJECT = "Mew Client";
   var STEPS = [
-    {id:"one-off",        title:"Address DT 1-off requests"},
-    {id:"relationship-csv", title:"Prepare relationship CSV"},
-    {id:"transfer-spoof", title:"Transfer Spoof Identities metadata to Delivery Data sheet"},
-    {id:"qa-edits",       title:"Apply QA edits of video metadata in Delivery Data (Live & Spoof)"},
-    {id:"bridgette",      title:"Run validation & S3 scanning scripts"},
-    {id:"anomalies",      title:"Correct anomalies & errors"},
-    {id:"execute",        title:"Execute delivery"},
-    {id:"delivery-issues",title:"Address issues revealed during delivery"},
-    {id:"notify-client",  title:"Notify client of delivery completion & details"}
+    {id:"one-off",        title:"Address DT 1-off requests", section:"Data Prep"},
+    {id:"s3-scan",        title:"Run S3 scanning scripts", section:"Data Prep"},
+    {id:"transfer-spoof", title:"Transfer Spoof Identities metadata to Delivery Data sheet", section:"Data Prep"},
+    {id:"relationship-csv", title:"Prepare relationship CSV", section:"Delivery"},
+    {id:"qa-edits",       title:"Apply QA edits of video metadata in Delivery Data (Live & Spoof)", section:"Delivery"},
+    {id:"bridgette",      title:"Run metadata schema validation scripts", section:"Delivery"},
+    {id:"anomalies",      title:"Correct anomalies & errors", section:"Delivery"},
+    {id:"execute",        title:"Execute delivery", section:"Delivery"},
+    {id:"delivery-issues",title:"Address issues revealed during delivery", section:"Delivery"},
+    {id:"notify-client",  title:"Notify client of delivery completion & details", section:"Delivery"}
   ];
   var STATUS_LABEL = {todo:"Not started", prog:"In progress", done:"Complete"};
   var STATUS_MARK  = {todo:"", prog:"\u2022", done:"\u2713"};
@@ -156,7 +159,9 @@ ol.steps{list-style:none;margin:0;padding:0;position:relative}
     var counts = {done:0, prog:0, todo:0};
 
     var segWrap = $("segments"); segWrap.innerHTML = "";
-    var listWrap = $("steps"); listWrap.innerHTML = "";
+    segWrap.style.gridTemplateColumns = "repeat(" + STEPS.length + ",1fr)";
+    var wrap = $("stepsWrap"); wrap.innerHTML = "";
+    var currentOl = null, lastSection = null;
 
     STEPS.forEach(function(step){
       var s = steps[step.id] || {};
@@ -167,12 +172,20 @@ ol.steps{list-style:none;margin:0;padding:0;position:relative}
       seg.title = step.title + ": " + STATUS_LABEL[status];
       segWrap.appendChild(seg);
 
+      if(step.section !== lastSection){
+        var heading = document.createElement("h2"); heading.className = "section-title"; heading.textContent = step.section;
+        wrap.appendChild(heading);
+        currentOl = document.createElement("ol"); currentOl.className = "steps";
+        wrap.appendChild(currentOl);
+        lastSection = step.section;
+      }
+
       var li = document.createElement("li"); li.className = "step"; li.setAttribute("data-status", status);
       var node = document.createElement("span"); node.className = "node";
       node.innerHTML = (status === "prog") ? PROG_ICON : STATUS_MARK[status];
       var body = document.createElement("div"); body.className = "body";
       var row = document.createElement("div"); row.className = "row";
-      var title = document.createElement("h2"); title.className = "title"; title.textContent = step.title;
+      var title = document.createElement("h3"); title.className = "title"; title.textContent = step.title;
       var pill = document.createElement("span"); pill.className = "pill"; pill.textContent = STATUS_LABEL[status];
       var stamp = document.createElement("p"); stamp.className = "stamp"; stamp.textContent = fmtStamp(s.updatedAt) + (s.by ? " by " + s.by : "");
       row.appendChild(title); row.appendChild(pill);
@@ -183,7 +196,7 @@ ol.steps{list-style:none;margin:0;padding:0;position:relative}
       }
       body.appendChild(stamp);
       li.appendChild(node); li.appendChild(body);
-      listWrap.appendChild(li);
+      currentOl.appendChild(li);
     });
 
     $("liveSetsValue").textContent = (data && data.liveSets != null) ? data.liveSets : "—";
