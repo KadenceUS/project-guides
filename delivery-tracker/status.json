@@ -38,9 +38,9 @@
     },
     "execute": {
       "status": "prog",
-      "updatedAt": "2026-09-22T23:53:21.613Z",
+      "updatedAt": "2026-09-23T01:00:16.484Z",
       "by": "Bridgette",
-      "notes": "Live - in progress\nSpoof normal - pending\nSpoof partials - pending\n\nSkipping \"metadata schema validation scripts\" and \"correct anomalies and errors\". These will be caught in the \"address issues revealed during delivery\" step."
+      "notes": "Live - complete\nSpoof normal - complete\nSpoof partials - in progress\n\nSkipping \"metadata schema validation scripts\" and \"correct anomalies and errors\". These will be caught in the \"address issues revealed during delivery\" step."
     },
     "delivery-issues": {
       "status": "todo",
@@ -54,5 +54,5 @@
   "deliveryDate": "2026-09-22",
   "liveSets": 115,
   "spoofSets": 110,
-  "exportedAt": "2026-09-22T23:55:50.853Z"
+  "exportedAt": "2026-09-23T01:00:18.880Z"
 }
