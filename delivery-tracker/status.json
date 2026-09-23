@@ -2,31 +2,27 @@
   "steps": {
     "one-off": {
       "status": "done",
-      "updatedAt": "2026-09-22T23:49:01.483Z",
-      "by": "Bridgette",
-      "notes": "Some data sets excluded"
+      "updatedAt": "2026-09-23T03:25:56.050Z",
+      "by": "Hassen",
+      "notes": "(1) Remaining items related to 9/10 - 9/13 S3 files being addressed [COMPLETE]; (2) MD5 hashes will need to be regenerated for new/updated files"
     },
     "s3-scan": {
-      "status": "done",
-      "updatedAt": "2026-09-22T23:55:48.081Z",
-      "by": "Bridgette",
-      "notes": "Includes data from DC dates 9/10 and 9/11. I'll either add 9/12 and 9/13 to this delivery or save them for tomorrow's."
-    },
-    "transfer-spoof": {
-      "status": "done",
-      "updatedAt": "2026-09-22T23:48:44.838Z",
-      "by": "Bridgette",
-      "notes": ""
-    },
-    "relationship-csv": {
       "status": "todo",
       "updatedAt": ""
     },
+    "transfer-spoof": {
+      "status": "todo",
+      "updatedAt": ""
+    },
+    "relationship-csv": {
+      "status": "prog",
+      "updatedAt": "2026-09-22T20:30:19.695Z",
+      "by": "Hassen",
+      "notes": "Working with Kyle on this; received confirmation from Probe on initial LA errors"
+    },
     "qa-edits": {
-      "status": "done",
-      "updatedAt": "2026-09-22T23:49:25.628Z",
-      "by": "Bridgette",
-      "notes": ""
+      "status": "todo",
+      "updatedAt": ""
     },
     "bridgette": {
       "status": "todo",
@@ -37,24 +33,20 @@
       "updatedAt": ""
     },
     "execute": {
-      "status": "done",
-      "updatedAt": "2026-09-23T01:08:14.350Z",
-      "by": "Bridgette",
-      "notes": "Live - complete\nSpoof normal - complete\nSpoof partials - in progress\n\nSkipping \"metadata schema validation scripts\" and \"correct anomalies and errors\". These will be caught in the \"address issues revealed during delivery\" step."
+      "status": "todo",
+      "updatedAt": ""
     },
     "delivery-issues": {
-      "status": "done",
-      "updatedAt": "2026-09-23T01:08:17.129Z",
-      "by": "Bridgette",
-      "notes": ""
+      "status": "todo",
+      "updatedAt": ""
     },
     "notify-client": {
       "status": "todo",
       "updatedAt": ""
     }
   },
-  "deliveryDate": "2026-09-22",
-  "liveSets": 115,
-  "spoofSets": 110,
-  "exportedAt": "2026-09-23T01:08:21.243Z"
+  "deliveryDate": "2026-09-23",
+  "liveSets": 248,
+  "spoofSets": 151,
+  "exportedAt": "2026-09-23T03:25:59.079Z"
 }
