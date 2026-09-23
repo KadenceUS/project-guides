@@ -118,6 +118,9 @@ select.status[data-status="prog"]{color:var(--s-done);background-color:var(--s-d
 button.primary{font:inherit;font-size:.85rem;color:#fff;background:var(--s-done);border:1px solid var(--s-done);
   border-radius:6px;padding:.4rem .8rem;cursor:pointer}
 button.primary:hover{opacity:.9}
+button.secondary{font:inherit;font-size:.85rem;color:var(--ink);background:transparent;border:1px solid var(--line);
+  border-radius:6px;padding:.4rem .8rem;cursor:pointer}
+button.secondary:hover{border-color:var(--muted)}
 #publishStatus{font-size:.85rem;color:var(--muted)}
 .gh-config{margin-top:1rem;font-size:.85rem;color:var(--muted)}
 .gh-config summary{cursor:pointer;color:var(--ink);font-weight:500;padding:.25rem 0}
@@ -177,6 +180,7 @@ button.primary:hover{opacity:.9}
   <div id="stepsWrap"></div>
 
   <div class="export-row">
+    <button id="pull" class="secondary" type="button" title="Fetch the latest published file and load it here, overwriting any unsaved local changes">Pull latest</button>
     <button id="publish" class="primary" type="button">Push update</button>
     <span id="publishStatus"></span>
   </div>
@@ -381,9 +385,14 @@ button.primary:hover{opacity:.9}
     return btoa(binary);
   }
 
-  function setPublishStatus(text){ $("publishStatus").textContent = text; }
+  function base64ToUtf8(b64){
+    var binary = atob(b64.replace(/\n/g, ""));
+    var bytes = new Uint8Array(binary.length);
+    for(var i=0; i<binary.length; i++){ bytes[i] = binary.charCodeAt(i); }
+    return new TextDecoder().decode(bytes);
+  }
 
-  function publishToGithub(){
+  function ghConfigFromFields(){
     var cfg = {
       token: $("ghToken").value.trim(),
       owner: $("ghOwner").value.trim(),
@@ -392,6 +401,45 @@ button.primary:hover{opacity:.9}
       path: $("ghPath").value.trim()
     };
     saveGhConfig(cfg);
+    return cfg;
+  }
+
+  function setPublishStatus(text){ $("publishStatus").textContent = text; }
+
+  function pullFromGithub(){
+    var cfg = ghConfigFromFields();
+    if(!cfg.token || !cfg.owner || !cfg.repo || !cfg.path){
+      setPublishStatus("Fill in the token and repo details below first.");
+      $("ghConfig").open = true;
+      return;
+    }
+    var encodedPath = cfg.path.split("/").map(encodeURIComponent).join("/");
+    var api = "https://api.github.com/repos/" + encodeURIComponent(cfg.owner) + "/" + encodeURIComponent(cfg.repo) + "/contents/" + encodedPath;
+
+    setPublishStatus("Pulling latest\u2026");
+    fetch(api + "?ref=" + encodeURIComponent(cfg.branch), {
+      headers: {"Authorization": "Bearer " + cfg.token, "Accept": "application/vnd.github+json"}
+    }).then(function(r){
+      if(r.status === 404) throw new Error("No published file found yet.");
+      if(!r.ok) throw new Error("Could not fetch file (HTTP " + r.status + ")");
+      return r.json();
+    }).then(function(file){
+      var parsed = JSON.parse(base64ToUtf8(file.content));
+      state = {
+        steps: parsed.steps || {},
+        deliveryDate: parsed.deliveryDate || "",
+        liveSets: (parsed.liveSets != null) ? parsed.liveSets : null,
+        spoofSets: (parsed.spoofSets != null) ? parsed.spoofSets : null
+      };
+      render(); saveDraft();
+      setPublishStatus("Pulled latest from GitHub.");
+    }).catch(function(err){
+      setPublishStatus("Couldn't pull: " + err.message);
+    });
+  }
+
+  function publishToGithub(){
+    var cfg = ghConfigFromFields();
     if(!cfg.token || !cfg.owner || !cfg.repo || !cfg.path){
       setPublishStatus("Fill in the token and repo details below first.");
       $("ghConfig").open = true;
@@ -452,6 +500,7 @@ button.primary:hover{opacity:.9}
   $("deliveryDate").addEventListener("change", function(){ saveDeliveryDate(this.value); });
   $("liveSets").addEventListener("change", function(){ saveSets("liveSets", this.value); });
   $("spoofSets").addEventListener("change", function(){ saveSets("spoofSets", this.value); });
+  $("pull").addEventListener("click", pullFromGithub);
   $("publish").addEventListener("click", publishToGithub);
 
   var armed = null;
