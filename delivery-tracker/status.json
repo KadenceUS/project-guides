@@ -23,22 +23,22 @@
       "updatedAt": ""
     },
     "qa-edits": {
-      "status": "prog",
-      "updatedAt": "2026-09-24T00:30:25.660Z",
+      "status": "done",
+      "updatedAt": "2026-09-24T01:22:38.502Z",
       "by": "Bridgette",
       "notes": ""
     },
     "bridgette": {
-      "status": "prog",
-      "updatedAt": "2026-09-24T00:31:06.745Z",
+      "status": "done",
+      "updatedAt": "2026-09-24T01:23:15.716Z",
       "by": "Bridgette",
-      "notes": "Kiernan is checking for missing demographic data and occlusion/action issues."
+      "notes": "Finished checks for missing demographic data and occlusion/action issues."
     },
     "anomalies": {
-      "status": "todo",
-      "updatedAt": "2026-09-24T00:31:26.738Z",
+      "status": "done",
+      "updatedAt": "2026-09-24T01:23:19.056Z",
       "by": "Bridgette",
-      "notes": "Instead of correcting, we'll exclude any data sets with issues from this delivery."
+      "notes": "Instead of correcting, we'll exclude any data sets with issues from this delivery. - Excluded 3 sets"
     },
     "execute": {
       "status": "todo",
@@ -56,5 +56,5 @@
   "deliveryDate": "2026-09-23",
   "liveSets": 158,
   "spoofSets": 91,
-  "exportedAt": "2026-09-24T01:21:16.481Z"
+  "exportedAt": "2026-09-24T01:23:22.826Z"
 }
