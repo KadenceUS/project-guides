@@ -2,67 +2,59 @@
   "steps": {
     "one-off": {
       "status": "done",
-      "updatedAt": "2026-09-23T03:25:56.050Z",
-      "by": "Hassen",
-      "notes": "(1) Remaining items related to 9/10 - 9/13 S3 files being addressed [COMPLETE]; (2) MD5 hashes will need to be regenerated for new/updated files"
+      "updatedAt": "2026-09-24T00:30:01.745Z",
+      "by": "Bridgette",
+      "notes": ""
     },
     "s3-scan": {
       "status": "done",
-      "updatedAt": "2026-09-23T03:34:48.317Z",
-      "by": "Hassen",
+      "updatedAt": "2026-09-24T00:30:03.610Z",
+      "by": "Bridgette",
       "notes": ""
     },
     "transfer-spoof": {
       "status": "done",
-      "updatedAt": "2026-09-23T03:34:50.296Z",
-      "by": "Hassen",
+      "updatedAt": "2026-09-24T00:30:06.744Z",
+      "by": "Bridgette",
       "notes": ""
     },
     "relationship-csv": {
-      "status": "done",
-      "updatedAt": "2026-09-23T06:25:32.252Z",
-      "by": "Hassen",
-      "notes": "Working with Kyle on this; received confirmation from Probe on initial LA errors"
+      "status": "todo",
+      "updatedAt": ""
     },
     "qa-edits": {
-      "status": "done",
-      "updatedAt": "2026-09-23T03:34:58.291Z",
-      "by": "Hassen",
+      "status": "prog",
+      "updatedAt": "2026-09-24T00:30:25.660Z",
+      "by": "Bridgette",
       "notes": ""
     },
     "bridgette": {
-      "status": "done",
-      "updatedAt": "2026-09-23T03:35:01.779Z",
-      "by": "Hassen",
-      "notes": ""
+      "status": "prog",
+      "updatedAt": "2026-09-24T00:31:06.745Z",
+      "by": "Bridgette",
+      "notes": "Kiernan is checking for missing demographic data and occlusion/action issues."
     },
     "anomalies": {
-      "status": "done",
-      "updatedAt": "2026-09-23T03:35:03.309Z",
-      "by": "Hassen",
-      "notes": ""
+      "status": "todo",
+      "updatedAt": "2026-09-24T00:31:26.738Z",
+      "by": "Bridgette",
+      "notes": "Instead of correcting, we'll exclude any data sets with issues from this delivery."
     },
     "execute": {
-      "status": "done",
-      "updatedAt": "2026-09-23T03:35:05.110Z",
-      "by": "Hassen",
-      "notes": ""
+      "status": "todo",
+      "updatedAt": ""
     },
     "delivery-issues": {
-      "status": "done",
-      "updatedAt": "2026-09-23T03:35:08.799Z",
-      "by": "Hassen",
-      "notes": ""
+      "status": "todo",
+      "updatedAt": ""
     },
     "notify-client": {
-      "status": "done",
-      "updatedAt": "2026-09-23T03:35:10.817Z",
-      "by": "Hassen",
-      "notes": ""
+      "status": "todo",
+      "updatedAt": ""
     }
   },
-  "deliveryDate": "2026-09-22",
-  "liveSets": 115,
-  "spoofSets": 110,
-  "exportedAt": "2026-09-23T06:30:17.064Z"
+  "deliveryDate": "2026-09-23",
+  "liveSets": 160,
+  "spoofSets": null,
+  "exportedAt": "2026-09-24T00:31:45.541Z"
 }
