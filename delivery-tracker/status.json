@@ -2,19 +2,19 @@
   "steps": {
     "one-off": {
       "status": "done",
-      "updatedAt": "2026-09-24T00:30:01.745Z",
+      "updatedAt": "2026-09-25T01:45:35.820Z",
       "by": "Bridgette",
       "notes": ""
     },
     "s3-scan": {
       "status": "done",
-      "updatedAt": "2026-09-24T00:30:03.610Z",
+      "updatedAt": "2026-09-25T01:45:38.450Z",
       "by": "Bridgette",
       "notes": ""
     },
     "transfer-spoof": {
       "status": "done",
-      "updatedAt": "2026-09-24T00:30:06.744Z",
+      "updatedAt": "2026-09-25T01:45:43.370Z",
       "by": "Bridgette",
       "notes": ""
     },
@@ -24,43 +24,41 @@
     },
     "qa-edits": {
       "status": "done",
-      "updatedAt": "2026-09-24T01:22:38.502Z",
+      "updatedAt": "2026-09-25T01:45:48.097Z",
       "by": "Bridgette",
       "notes": ""
     },
     "bridgette": {
       "status": "done",
-      "updatedAt": "2026-09-24T01:23:15.716Z",
+      "updatedAt": "2026-09-25T01:45:52.019Z",
       "by": "Bridgette",
-      "notes": "Finished checks for missing demographic data and occlusion/action issues."
+      "notes": ""
     },
     "anomalies": {
       "status": "done",
-      "updatedAt": "2026-09-24T01:23:19.056Z",
+      "updatedAt": "2026-09-25T01:45:54.654Z",
       "by": "Bridgette",
-      "notes": "Instead of correcting, we'll exclude any data sets with issues from this delivery. - Excluded 3 sets"
+      "notes": ""
     },
     "execute": {
-      "status": "done",
-      "updatedAt": "2026-09-24T02:22:55.144Z",
+      "status": "prog",
+      "updatedAt": "2026-09-25T01:45:57.549Z",
       "by": "Bridgette",
       "notes": ""
     },
     "delivery-issues": {
-      "status": "done",
-      "updatedAt": "2026-09-24T02:22:57.397Z",
+      "status": "prog",
+      "updatedAt": "2026-09-25T01:46:04.074Z",
       "by": "Bridgette",
       "notes": ""
     },
     "notify-client": {
-      "status": "done",
-      "updatedAt": "2026-09-24T02:24:51.292Z",
-      "by": "Bridgette",
-      "notes": ""
+      "status": "todo",
+      "updatedAt": ""
     }
   },
-  "deliveryDate": "2026-09-23",
-  "liveSets": 157,
-  "spoofSets": 91,
-  "exportedAt": "2026-09-24T02:24:52.628Z"
+  "deliveryDate": "2026-09-24",
+  "liveSets": 146,
+  "spoofSets": null,
+  "exportedAt": "2026-09-25T01:46:09.033Z"
 }
