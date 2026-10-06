@@ -1,0 +1,617 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LA video upload</title>
+<style>
+  :root {
+    --accent: #2D2A8C;
+    --accent-soft: #ecebf8;
+    --ink: #1b1b24;
+    --muted: #666676;
+    --line: #e3e3ec;
+    --bg: #fafafc;
+    --ok: #1f7a4d;
+    --warn: #9a5b00;
+    --err: #b3261e;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 820px; margin: 0 auto; padding: 32px 20px 80px; }
+  header { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 28px; }
+  h1 { font-size: 22px; margin: 0; font-weight: 650; color: var(--accent); }
+  h2 { font-size: 15px; margin: 0 0 8px; font-weight: 650; }
+  section { margin-bottom: 28px; }
+  .muted { color: var(--muted); }
+  .small { font-size: 13px; }
+  .row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 14px; max-width: 360px; }
+  label { font-size: 13px; color: var(--muted); }
+  input[type=email], input[type=password], select {
+    font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--ink);
+  }
+  select { min-width: 260px; }
+  button {
+    font: inherit; padding: 8px 14px; border-radius: 6px; border: 1px solid var(--line);
+    background: #fff; color: var(--ink); cursor: pointer;
+  }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  button.link { border: 0; background: none; padding: 0; color: var(--accent); text-decoration: underline; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .dest { padding: 10px 12px; background: var(--accent-soft); border-radius: 6px; word-break: break-all; font-size: 13px; }
+  .check { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; color: var(--ink); }
+  .check input { margin-top: 4px; }
+  .msg { padding: 10px 12px; border-radius: 6px; font-size: 14px; margin-bottom: 14px; }
+  .msg.err { background: #fbeceb; color: var(--err); }
+  .msg.warn { background: #fdf3e3; color: var(--warn); }
+  hr { border: 0; border-top: 1px solid var(--line); margin: 28px 0; }
+
+  .bar { height: 8px; background: var(--line); border-radius: 4px; overflow: hidden; }
+  .bar > i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .2s; }
+  .stats { display: flex; gap: 28px; flex-wrap: wrap; margin: 14px 0 6px; }
+  .stat b { display: block; font-size: 18px; font-variant-numeric: tabular-nums; }
+  .stat span { font-size: 12px; color: var(--muted); }
+  .stat.bad b { color: var(--err); }
+
+  .tabs { display: flex; gap: 6px; margin: 18px 0 8px; }
+  .tabs button { padding: 4px 10px; font-size: 13px; }
+  .tabs button[aria-pressed=true] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; font-weight: 600; color: var(--muted); padding: 6px 8px; border-bottom: 1px solid var(--line); }
+  td { padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  td.name { word-break: break-all; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .st-done { color: var(--ok); } .st-failed { color: var(--err); } .st-skipped, .st-cancelled { color: var(--muted); }
+  .mini { height: 4px; background: var(--line); border-radius: 2px; margin-top: 4px; width: 90px; }
+  .mini > i { display: block; height: 100%; background: var(--accent); border-radius: 2px; }
+
+  #log { border: 1px solid var(--line); background: #fff; border-radius: 6px; max-height: 320px; overflow: auto; font-size: 13px; }
+  #log div { display: grid; grid-template-columns: 74px 1fr; gap: 10px; padding: 4px 10px; border-bottom: 1px solid var(--line); border-left: 3px solid transparent; }
+  #log div:last-child { border-bottom: 0; }
+  #log .t { color: var(--muted); font-variant-numeric: tabular-nums; }
+  #log .warn { border-left-color: var(--warn); background: #fffaf0; }
+  #log .error { border-left-color: var(--err); background: #fff6f5; }
+  #log .ok { border-left-color: var(--ok); }
+  .head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 22px 0 8px; flex-wrap: wrap; }
+  .head h2 { margin: 0; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>LA video upload</h1>
+    <div id="who" class="small muted" hidden><span id="whoName"></span> <button id="signOut" class="link">Sign out</button></div>
+  </header>
+
+  <section id="authView" hidden>
+    <div id="authMsg" class="msg err" hidden></div>
+    <form id="signInForm">
+      <div class="field"><label for="email">Email</label><input id="email" type="email" autocomplete="username" required></div>
+      <div class="field"><label for="password">Password</label><input id="password" type="password" autocomplete="current-password" required></div>
+      <button class="primary" type="submit">Sign in</button>
+    </form>
+    <form id="newPwForm" hidden>
+      <p class="muted">Choose a new password to finish setting up your account.</p>
+      <div class="field"><label for="newPw">New password</label><input id="newPw" type="password" autocomplete="new-password" required></div>
+      <button class="primary" type="submit">Save password and sign in</button>
+    </form>
+  </section>
+
+  <section id="appView" hidden>
+    <div id="compat" class="msg warn" hidden>This browser cannot read local folders. Open this page in Chrome or Edge on a desktop computer.</div>
+
+    <section>
+      <h2>Source folder</h2>
+      <div class="row">
+        <button id="pickFolder">Choose folder</button>
+        <span id="folderName" class="muted">No folder selected</span>
+      </div>
+      <p class="small muted" style="margin:6px 0 0">Choose the folder that contains the dated subfolders, such as 20261005.</p>
+    </section>
+
+    <section>
+      <div class="field">
+        <label for="dateSelect">Date to upload</label>
+        <select id="dateSelect" disabled><option>Choose a folder first</option></select>
+      </div>
+      <div id="scanInfo" class="small muted"></div>
+    </section>
+
+    <section>
+      <h2>Destination</h2>
+      <div class="dest" id="dest"></div>
+    </section>
+
+
+    <div class="row">
+      <button id="start" class="primary" disabled>Start upload</button>
+      <button id="cancel" hidden>Cancel</button>
+    </div>
+
+    <div id="runView" hidden>
+      <hr>
+      <div id="phase" style="font-weight:600;margin-bottom:8px"></div>
+      <div class="bar"><i id="bar"></i></div>
+      <div class="stats">
+        <div class="stat"><b id="sUp">0</b><span>Uploaded</span></div>
+        <div class="stat"><b id="sSkip">0</b><span>Skipped</span></div>
+        <div class="stat bad"><b id="sFail">0</b><span>Failed</span></div>
+        <div class="stat"><b id="sData">0 B</b><span>Sent</span></div>
+        <div class="stat"><b id="sSpeed">-</b><span>Speed</span></div>
+        <div class="stat"><b id="sEta">-</b><span>Time left</span></div>
+      </div>
+
+      <div class="head"><h2>Files</h2></div>
+      <div class="tabs" id="tabs">
+        <button data-f="active" aria-pressed="true">In progress</button>
+        <button data-f="failed" aria-pressed="false">Failed</button>
+        <button data-f="all" aria-pressed="false">All</button>
+      </div>
+      <table>
+        <thead><tr><th>File</th><th class="num">Size</th><th>Status</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+      <p id="rowsNote" class="small muted"></p>
+
+      <div class="head">
+        <h2>Log</h2>
+        <div class="row">
+          <select id="logLevel" style="min-width:0"><option value="all">All messages</option><option value="problems">Warnings and errors</option></select>
+          <button id="dlLog" class="small">Download log</button>
+          <button id="dlCsv" class="small">Download file report</button>
+        </div>
+      </div>
+      <div id="log" role="log" aria-live="polite"></div>
+    </div>
+  </section>
+</main>
+
+<script type="module">
+import { S3Client, ListObjectsV2Command, PutObjectCommand } from "https://esm.sh/@aws-sdk/client-s3@3";
+import { Upload } from "https://esm.sh/@aws-sdk/lib-storage@3";
+import { CognitoIdentityProviderClient, InitiateAuthCommand, RespondToAuthChallengeCommand } from "https://esm.sh/@aws-sdk/client-cognito-identity-provider@3";
+import { fromCognitoIdentityPool } from "https://esm.sh/@aws-sdk/credential-providers@3";
+import { createMD5 } from "https://esm.sh/hash-wasm@4";
+
+/* ---------- Configuration: fill in after the AWS setup ---------- */
+const CFG = {
+  region: "us-west-2",
+  bucket: "mjolnir.assets-784505366114-us-west-2-an",
+  prefix: "LA",
+  userPoolId: "us-west-2_d4gjWFn5M",       // e.g. us-west-2_AbCdEfGhI
+  clientId: "2vomjjftcs6aqt1lc7staec805",         // user pool app client id (no secret)
+  identityPoolId: "us-west-2:12a63cea-de45-4ef1-a1db-d866f139d919",   // e.g. us-west-2:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+  saveRunLogToS3: true,           // writes a JSON run log to <prefix>/_upload-logs/
+  fileConcurrency: 3,
+  partSizeMB: 16
+};
+
+const $ = (id) => document.getElementById(id);
+const state = { root: null, dates: [], files: [], items: [], filter: "active", running: false, scanToken: 0, user: null };
+let s3 = null, ac = null, tokens = null, pendingChallenge = null;
+const logs = [];
+const activeUploads = new Set();
+
+/* ---------- Helpers ---------- */
+const fmtBytes = (n) => {
+  if (!isFinite(n) || n <= 0) return "0 B";
+  const u = ["B", "KB", "MB", "GB", "TB"]; const i = Math.min(Math.floor(Math.log(n) / Math.log(1024)), 4);
+  return (n / Math.pow(1024, i)).toFixed(i ? 1 : 0) + " " + u[i];
+};
+const fmtDur = (s) => {
+  if (!isFinite(s) || s < 0) return "-";
+  s = Math.round(s); const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60;
+  return h ? `${h}h ${m}m` : m ? `${m}m ${x}s` : `${x}s`;
+};
+const pad = (n) => String(n).padStart(2, "0");
+const today = () => { const d = new Date(); return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}`; };
+const prettyDate = (ymd) => {
+  const d = new Date(+ymd.slice(0, 4), +ymd.slice(4, 6) - 1, +ymd.slice(6, 8));
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+};
+const stamp = () => { const d = new Date(); return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; };
+const jwt = (t) => JSON.parse(atob(t.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
+
+function explain(e) {
+  const n = e?.name || "Error", m = e?.message || String(e);
+  if (n === "AccessDenied" || /AccessDenied/.test(m)) return "Access denied. Your account may not be allowed to write to this folder.";
+  if (/Expired/i.test(n) || /expired/i.test(m)) return "Your session expired. Sign in again and start the upload to continue.";
+  if (/Failed to fetch|NetworkError|Load failed/i.test(m)) return "Network error. Check your connection. If it keeps happening, the bucket CORS settings may not include this site.";
+  return `${n}: ${m}`;
+}
+
+/* ---------- Log ---------- */
+function log(level, msg) {
+  const entry = { time: new Date().toISOString(), level, msg };
+  logs.push(entry);
+  appendLogLine(entry);
+}
+function appendLogLine(entry) {
+  const mode = $("logLevel").value;
+  if (mode === "problems" && entry.level !== "warn" && entry.level !== "error") return;
+  const box = $("log");
+  const atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 40;
+  const row = document.createElement("div");
+  row.className = entry.level;
+  const t = document.createElement("span"); t.className = "t"; t.textContent = new Date(entry.time).toTimeString().slice(0, 8);
+  const m = document.createElement("span"); m.textContent = entry.msg;
+  row.append(t, m); box.append(row);
+  if (atBottom) box.scrollTop = box.scrollHeight;
+}
+function redrawLog() { $("log").replaceChildren(); logs.forEach(appendLogLine); }
+$("logLevel").addEventListener("change", redrawLog);
+
+function download(name, text, type) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+const logText = () => logs.map((l) => `${l.time}  ${l.level.toUpperCase().padEnd(5)}  ${l.msg}`).join("\n");
+const csvCell = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+function reportCsv() {
+  const rows = [["key", "size_bytes", "status", "error"]];
+  state.items.forEach((i) => rows.push([i.key, i.size, i.status, i.error || ""]));
+  return rows.map((r) => r.map(csvCell).join(",")).join("\n");
+}
+$("dlLog").onclick = () => download(`upload-log-${state.date || today()}.txt`, logText(), "text/plain");
+$("dlCsv").onclick = () => download(`upload-report-${state.date || today()}.csv`, reportCsv(), "text/csv");
+
+/* ---------- Auth ---------- */
+const idp = new CognitoIdentityProviderClient({ region: CFG.region });
+const providerKey = `cognito-idp.${CFG.region}.amazonaws.com/${CFG.userPoolId}`;
+
+function setTokens(r, email) {
+  const a = r.AuthenticationResult;
+  tokens = { id: a.IdToken, refresh: a.RefreshToken || tokens?.refresh, exp: jwt(a.IdToken).exp * 1000, email };
+  sessionStorage.setItem("lau_refresh", tokens.refresh);
+  sessionStorage.setItem("lau_email", email);
+}
+async function getIdToken() {
+  if (!tokens) throw new Error("Not signed in");
+  if (tokens.exp - Date.now() < 5 * 60 * 1000) {
+    const r = await idp.send(new InitiateAuthCommand({
+      AuthFlow: "REFRESH_TOKEN_AUTH", ClientId: CFG.clientId, AuthParameters: { REFRESH_TOKEN: tokens.refresh }
+    }));
+    setTokens(r, tokens.email);
+  }
+  return tokens.id;
+}
+function buildClient() {
+  s3 = new S3Client({
+    region: CFG.region,
+    credentials: fromCognitoIdentityPool({
+      clientConfig: { region: CFG.region },
+      identityPoolId: CFG.identityPoolId,
+      logins: { [providerKey]: getIdToken }
+    })
+  });
+}
+function showApp(email) {
+  state.user = email;
+  $("authView").hidden = true; $("appView").hidden = false;
+  $("who").hidden = false; $("whoName").textContent = email;
+  buildClient();
+}
+function showAuth(msg) {
+  $("appView").hidden = true; $("authView").hidden = false; $("who").hidden = true;
+  $("signInForm").hidden = false; $("newPwForm").hidden = true;
+  $("authMsg").hidden = !msg; $("authMsg").textContent = msg || "";
+}
+async function afterAuth(r, email) {
+  if (r.ChallengeName === "NEW_PASSWORD_REQUIRED") {
+    pendingChallenge = { session: r.Session, email };
+    $("signInForm").hidden = true; $("newPwForm").hidden = false; $("authMsg").hidden = true;
+    return;
+  }
+  if (!r.AuthenticationResult) throw new Error("Sign in needs a step this page does not support (" + (r.ChallengeName || "unknown") + ").");
+  setTokens(r, email); showApp(email);
+}
+$("signInForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const email = $("email").value.trim();
+  try {
+    const r = await idp.send(new InitiateAuthCommand({
+      AuthFlow: "USER_PASSWORD_AUTH", ClientId: CFG.clientId,
+      AuthParameters: { USERNAME: email, PASSWORD: $("password").value }
+    }));
+    await afterAuth(r, email);
+  } catch (err) {
+    showAuth(err.name === "NotAuthorizedException" ? "Email or password is incorrect." : explain(err));
+  }
+});
+$("newPwForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  try {
+    const r = await idp.send(new RespondToAuthChallengeCommand({
+      ChallengeName: "NEW_PASSWORD_REQUIRED", ClientId: CFG.clientId, Session: pendingChallenge.session,
+      ChallengeResponses: { USERNAME: pendingChallenge.email, NEW_PASSWORD: $("newPw").value }
+    }));
+    await afterAuth(r, pendingChallenge.email);
+  } catch (err) { showAuth(explain(err)); }
+});
+$("signOut").onclick = () => {
+  if (state.running && !confirm("An upload is running. Sign out and stop it?")) return;
+  ac?.abort(); tokens = null; sessionStorage.clear(); location.reload();
+};
+
+/* ---------- Folder and date selection ---------- */
+if (!window.showDirectoryPicker) { $("compat").hidden = false; $("pickFolder").disabled = true; }
+
+$("pickFolder").onclick = async () => {
+  try { state.root = await window.showDirectoryPicker({ mode: "read" }); }
+  catch (e) { if (e.name === "AbortError") return; log("error", explain(e)); return; }
+  $("folderName").textContent = state.root.name;
+  const dates = [];
+  for await (const [name, h] of state.root.entries()) {
+    if (h.kind === "directory" && /^\d{8}$/.test(name)) dates.push({ name, handle: h });
+  }
+  if (!dates.length && /^\d{8}$/.test(state.root.name)) dates.push({ name: state.root.name, handle: state.root });
+  dates.sort((a, b) => b.name.localeCompare(a.name));
+  state.dates = dates;
+  const sel = $("dateSelect");
+  sel.replaceChildren();
+  if (!dates.length) {
+    sel.append(new Option("No dated folders found", "")); sel.disabled = true;
+    $("scanInfo").textContent = "That folder has no subfolders named like 20261005. Choose a different folder.";
+    $("start").disabled = true; return;
+  }
+  dates.forEach((d) => sel.append(new Option(prettyDate(d.name), d.name)));
+  const t = today();
+  sel.value = dates.some((d) => d.name === t) ? t : dates[0].name;
+  sel.disabled = false;
+  if (sel.value !== t) $("scanInfo").textContent = `No folder for today (${t}) was found, so the most recent date is selected.`;
+  scanSelected();
+};
+$("dateSelect").onchange = scanSelected;
+
+async function walk(dir, prefix, out) {
+  for await (const [name, h] of dir.entries()) {
+    if (h.kind === "directory") {
+      if (name === ".thumbnails") continue;
+      await walk(h, prefix + name + "/", out);
+    } else {
+      if (name.endsWith(".DS_Store")) continue;
+      const file = await h.getFile();
+      out.push({ rel: prefix + name, file, size: file.size });
+    }
+  }
+}
+async function scanSelected() {
+  const token = ++state.scanToken;
+  const date = $("dateSelect").value;
+  $("dest").textContent = `s3://${CFG.bucket}/${CFG.prefix}/${date}/`;
+  $("start").disabled = true;
+  $("scanInfo").textContent = "Counting files...";
+  const d = state.dates.find((x) => x.name === date);
+  const out = [];
+  try { await walk(d.handle, "", out); } catch (e) { $("scanInfo").textContent = explain(e); return; }
+  if (token !== state.scanToken) return;
+  state.date = date; state.files = out;
+  const total = out.reduce((a, f) => a + f.size, 0);
+  $("scanInfo").textContent = out.length ? `${out.length} files, ${fmtBytes(total)} in this folder.` : "This folder has no files to upload.";
+  $("start").disabled = !out.length || state.running;
+}
+
+/* ---------- Run ---------- */
+const isMov = (rel) => /\.mov$/i.test(rel) && rel.split("/").length === 2;
+
+function setPhase(t) { $("phase").textContent = t; }
+
+async function listRemote(prefix) {
+  const map = new Map(); let token;
+  do {
+    const r = await s3.send(new ListObjectsV2Command({ Bucket: CFG.bucket, Prefix: prefix, ContinuationToken: token }));
+    (r.Contents || []).forEach((o) => map.set(o.Key, o.Size));
+    token = r.IsTruncated ? r.NextContinuationToken : undefined;
+  } while (token);
+  return map;
+}
+
+async function md5File(file) {
+  const h = await createMD5(); h.init();
+  const reader = file.stream().getReader();
+  for (;;) {
+    if (ac.signal.aborted) throw new Error("cancelled");
+    const { done, value } = await reader.read();
+    if (done) break;
+    h.update(value);
+  }
+  return h.digest("hex");
+}
+
+async function buildManifests(items, base) {
+  const bySub = new Map();
+  items.filter((i) => isMov(i.rel)).forEach((i) => {
+    const sub = i.rel.split("/")[0];
+    (bySub.get(sub) || bySub.set(sub, []).get(sub)).push(i);
+  });
+  const manifests = [];
+  let n = 0;
+  for (const [sub, list] of bySub) {
+    const lines = ["filename,md5"];
+    for (const it of list) {
+      n++;
+      setPhase(`Checking .mov files (${n} of ${[...bySub.values()].flat().length})`);
+      const prev = it.status;
+      it.status = "hashing"; scheduleRender();
+      const sum = await md5File(it.file);
+      lines.push(`"${it.rel.split("/")[1]}","${sum}"`);
+      it.status = prev;
+    }
+    const body = new Blob([lines.join("\n") + "\n"], { type: "text/csv" });
+    manifests.push({ key: `${base}${sub}/md5_values.csv`, rel: `${sub}/md5_values.csv`, size: body.size, body, type: "text/csv", status: "queued", loaded: 0, kind: "manifest" });
+    log("info", `Created md5_values.csv for ${sub} (${list.length} .mov files)`);
+  }
+  return manifests;
+}
+
+async function uploadItem(it) {
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    if (ac.signal.aborted) { it.status = "cancelled"; return; }
+    it.status = "uploading"; it.loaded = 0; scheduleRender();
+    const up = new Upload({
+      client: s3,
+      params: { Bucket: CFG.bucket, Key: it.key, Body: it.body, ContentType: it.type || "application/octet-stream" },
+      queueSize: 4, partSize: CFG.partSizeMB * 1024 * 1024, leavePartsOnError: false
+    });
+    activeUploads.add(up);
+    up.on("httpUploadProgress", (p) => { if (p.loaded != null) it.loaded = Math.min(p.loaded, it.size); scheduleRender(); });
+    try {
+      await up.done();
+      it.loaded = it.size; it.status = "done"; delete it.error;
+      log("ok", `Uploaded ${it.rel} (${fmtBytes(it.size)})`);
+      return;
+    } catch (e) {
+      if (ac.signal.aborted) { it.status = "cancelled"; return; }
+      it.error = explain(e);
+      const fatal = /Access denied|session expired/i.test(it.error);
+      if (attempt === 1 && !fatal) { log("warn", `Retrying ${it.rel}: ${it.error}`); continue; }
+      it.status = "failed";
+      log("error", `Failed ${it.rel}: ${it.error}`);
+      return;
+    } finally { activeUploads.delete(up); }
+  }
+}
+
+let renderQueued = false;
+function scheduleRender() { if (!renderQueued) { renderQueued = true; requestAnimationFrame(() => { renderQueued = false; render(); }); } }
+
+const statusLabel = (i) => ({
+  queued: "Waiting", hashing: "Checking", uploading: `Uploading ${i.size ? Math.floor((i.loaded / i.size) * 100) : 0}%`,
+  done: "Uploaded", skipped: "Skipped (already in S3)", failed: "Failed", cancelled: "Cancelled"
+}[i.status]);
+
+let speed = 0, lastBytes = 0, lastT = 0, startedAt = 0;
+function render() {
+  const items = state.items;
+  const c = (s) => items.filter((i) => i.status === s).length;
+  const sendable = items.filter((i) => i.status !== "skipped");
+  const totalBytes = sendable.reduce((a, i) => a + i.size, 0);
+  const sent = sendable.reduce((a, i) => a + (i.status === "done" ? i.size : i.loaded || 0), 0);
+  $("bar").style.width = (totalBytes ? (sent / totalBytes) * 100 : 0) + "%";
+  $("sUp").textContent = c("done"); $("sSkip").textContent = c("skipped"); $("sFail").textContent = c("failed");
+  $("sData").textContent = fmtBytes(sent);
+  const now = Date.now();
+  if (now - lastT > 1000) { const inst = ((sent - lastBytes) / (now - lastT)) * 1000; speed = speed ? speed * 0.7 + inst * 0.3 : inst; lastBytes = sent; lastT = now; }
+  $("sSpeed").textContent = state.running && speed > 0 ? fmtBytes(speed) + "/s" : "-";
+  $("sEta").textContent = state.running && speed > 0 ? fmtDur((totalBytes - sent) / speed) : "-";
+
+  const f = state.filter;
+  const list = f === "failed" ? items.filter((i) => i.status === "failed")
+    : f === "active" ? items.filter((i) => i.status === "uploading" || i.status === "hashing") : items;
+  const shown = list.slice(0, 200);
+  $("rows").replaceChildren(...shown.map((i) => {
+    const tr = document.createElement("tr");
+    const a = document.createElement("td"); a.className = "name"; a.textContent = i.rel;
+    if (i.error) { const e = document.createElement("div"); e.className = "small st-failed"; e.textContent = i.error; a.append(e); }
+    const b = document.createElement("td"); b.className = "num"; b.textContent = fmtBytes(i.size);
+    const s = document.createElement("td"); s.className = "st-" + i.status; s.textContent = statusLabel(i);
+    if (i.status === "uploading") { const m = document.createElement("div"); m.className = "mini"; m.innerHTML = "<i></i>"; m.firstChild.style.width = (i.size ? (i.loaded / i.size) * 100 : 0) + "%"; s.append(m); }
+    tr.append(a, b, s); return tr;
+  }));
+  $("rowsNote").textContent = list.length > 200 ? `Showing the first 200 of ${list.length}. Use Download file report for the full list.` : (list.length ? "" : (f === "all" ? "" : "Nothing here."));
+  const t = document.querySelectorAll("#tabs button");
+  t[0].textContent = `In progress (${c("uploading") + c("hashing")})`; t[1].textContent = `Failed (${c("failed")})`; t[2].textContent = `All (${items.length})`;
+}
+$("tabs").addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  state.filter = b.dataset.f;
+  document.querySelectorAll("#tabs button").forEach((x) => x.setAttribute("aria-pressed", x === b));
+  render();
+});
+
+window.addEventListener("beforeunload", (e) => { if (state.running) { e.preventDefault(); e.returnValue = ""; } });
+
+$("cancel").onclick = () => {
+  if (!confirm("Stop the upload? Files already uploaded stay in S3. You can start again later and finished files will be skipped.")) return;
+  ac.abort(); activeUploads.forEach((u) => u.abort()); log("warn", "Cancel requested.");
+};
+
+$("start").onclick = async () => {
+  if (state.running) return;
+  state.running = true; ac = new AbortController(); logs.length = 0; $("log").replaceChildren();
+  $("runView").hidden = false; $("start").disabled = true; $("cancel").hidden = false;
+  $("pickFolder").disabled = true; $("dateSelect").disabled = true;
+  speed = 0; lastBytes = 0; lastT = Date.now(); startedAt = Date.now();
+  let wake = null; try { wake = await navigator.wakeLock?.request("screen"); } catch {}
+
+  const date = state.date, base = `${CFG.prefix}/${date}/`;
+  const wantManifest = true;
+  const mkType = (f) => f.type || (/\.mov$/i.test(f.name) ? "video/quicktime" : "");
+  state.items = state.files
+    .filter((f) => !(wantManifest && /(^|\/)md5_values\.csv$/.test(f.rel) && f.rel.split("/").length === 2))
+    .map((f) => ({ key: base + f.rel, rel: f.rel, size: f.size, body: f.file, file: f.file, type: mkType(f.file), status: "queued", loaded: 0, kind: "file" }));
+  render();
+  log("info", `Started by ${state.user}`);
+  log("info", `Source: ${state.root.name}/${date}  Destination: s3://${CFG.bucket}/${base}`);
+  log("info", `${state.items.length} files, ${fmtBytes(state.items.reduce((a, i) => a + i.size, 0))}`);
+
+  try {
+    setPhase("Checking what is already in S3");
+    const remote = await listRemote(base);
+    log("info", `${remote.size} objects already in S3 under this date`);
+    state.items.forEach((i) => { if (remote.get(i.key) === i.size) { i.status = "skipped"; } });
+    const skipped = state.items.filter((i) => i.status === "skipped").length;
+    if (skipped) log("info", `Skipping ${skipped} files that are already in S3 with the same size`);
+
+    if (wantManifest) {
+      const manifests = await buildManifests(state.items.filter((i) => i.status !== "skipped" || isMov(i.rel)), base);
+      state.items.push(...manifests);
+    }
+
+    const queue = state.items.filter((i) => i.status === "queued");
+    setPhase(`Uploading ${queue.length} files`);
+    let idx = 0;
+    const worker = async () => { while (!ac.signal.aborted) { const it = queue[idx++]; if (!it) return; await uploadItem(it); } };
+    await Promise.all(Array.from({ length: CFG.fileConcurrency }, worker));
+  } catch (e) {
+    if (!ac.signal.aborted) log("error", explain(e));
+  }
+
+  const c = (s) => state.items.filter((i) => i.status === s).length;
+  const cancelled = ac.signal.aborted;
+  const summary = { user: state.user, date, bucket: CFG.bucket, prefix: base, uploaded: c("done"), skipped: c("skipped"), failed: c("failed"), notStarted: c("queued") + c("cancelled"), cancelled, seconds: Math.round((Date.now() - startedAt) / 1000) };
+  setPhase(cancelled ? "Cancelled" : summary.failed ? `Finished with ${summary.failed} failed` : "Upload complete");
+  log(cancelled || summary.failed ? "warn" : "ok",
+    `${cancelled ? "Cancelled" : "Finished"}: ${summary.uploaded} uploaded, ${summary.skipped} skipped, ${summary.failed} failed, in ${fmtDur(summary.seconds)}`);
+  if (summary.failed || cancelled) log("info", "Press Start upload again to retry. Files already in S3 are skipped.");
+
+  if (CFG.saveRunLogToS3) {
+    try {
+      const key = `${CFG.prefix}/_upload-logs/${date}_${new Date().toISOString().replace(/[:.]/g, "-")}_${(state.user || "user").replace(/[^a-z0-9@.-]/gi, "_")}.json`;
+      await s3.send(new PutObjectCommand({ Bucket: CFG.bucket, Key: key, ContentType: "application/json",
+        Body: JSON.stringify({ summary, files: state.items.map(({ key, size, status, error }) => ({ key, size, status, error })), log: logs }, null, 2) }));
+      log("info", `Run log saved to s3://${CFG.bucket}/${key}`);
+    } catch (e) { log("warn", "Could not save the run log to S3: " + explain(e)); }
+  }
+
+  try { await wake?.release(); } catch {}
+  state.running = false; $("cancel").hidden = true; $("start").disabled = false; $("start").textContent = "Start upload again";
+  $("pickFolder").disabled = false; $("dateSelect").disabled = false;
+  render();
+};
+
+/* ---------- Boot ---------- */
+(async function boot() {
+  $("dest").textContent = `s3://${CFG.bucket}/${CFG.prefix}/`;
+  if ([CFG.userPoolId, CFG.clientId, CFG.identityPoolId].some((v) => v.startsWith("REPLACE"))) {
+    showAuth("This page is not configured yet. Fill in the Cognito IDs in the CFG block at the top of the script."); $("signInForm").hidden = true; return;
+  }
+  const refresh = sessionStorage.getItem("lau_refresh"), email = sessionStorage.getItem("lau_email");
+  if (refresh && email) {
+    try {
+      tokens = { refresh, email, exp: 0, id: "" };
+      await getIdToken(); showApp(email); return;
+    } catch { tokens = null; sessionStorage.clear(); }
+  }
+  showAuth();
+})();
+</script>
+</body>
+</html>
