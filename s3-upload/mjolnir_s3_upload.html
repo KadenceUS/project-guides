@@ -18,8 +18,14 @@
 }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--kadence-midnight-grey); color: #fff; font: 400 15px/1.55 var(--kadence-font); }
-main { max-width: 600px; margin: 0 auto; padding: 56px 24px 48px; }
-h1 { font-size: 30px; font-weight: 700; line-height: 1.2; margin: 0 0 40px; letter-spacing: -.01em; color: #fff; }
+html, body { height: 100%; overflow: hidden; }
+main { max-width: 1040px; height: 100vh; height: 100dvh; margin: 0 auto; padding: 44px 32px 20px; display: flex; flex-direction: column; }
+#authView { max-width: 340px; }
+.app { flex: 1; min-height: 0; display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 64px; }
+.setup { min-height: 0; }
+.progress { min-height: 0; display: flex; flex-direction: column; }
+#idleNote { margin: 0; font-size: 13px; }
+h1 { font-size: 30px; font-weight: 700; line-height: 1.2; margin: 0 0 32px; letter-spacing: -.01em; color: #fff; }
 .dot { color: var(--kadence-dot); }
 .muted { color: var(--muted); }
 .small { font-size: 13px; }
@@ -41,7 +47,8 @@ button.link:hover:not(:disabled) { color: var(--kadence-tangerine); background: 
 .msg { padding: 12px 14px; margin-bottom: 24px; font-size: 14px; color: var(--panel-text); border-left: 3px solid var(--kadence-watermelon-red); background: var(--kadence-watermelon-red-12); border-radius: 0 6px 6px 0; }
 .msg.warn { border-left-color: var(--kadence-light-orange); background: var(--kadence-light-orange-12); }
 
-#runView { margin-top: 44px; }
+#runView { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+#runView > .phase, #runView > .bar, #runView > #statline, #runView > details, #runView > .loghead { flex-shrink: 0; }
 .phase { font-weight: 600; margin-bottom: 10px; }
 .bar { height: 6px; background: rgba(255, 255, 255, .22); border-radius: 3px; overflow: hidden; }
 .bar > i { display: block; height: 100%; width: 0; background: var(--kadence-green); transition: width .25s; }
@@ -49,7 +56,8 @@ button.link:hover:not(:disabled) { color: var(--kadence-tangerine); background: 
 .failed { font-weight: 600; color: #fff; }
 .failed::before, .st::before { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 7px; background: var(--kadence-watermelon-red); }
 
-details { margin-top: 28px; }
+details { margin-top: 22px; }
+.filesWrap { max-height: min(26vh, 220px); overflow: auto; }
 summary { cursor: pointer; font-weight: 600; font-size: 15px; }
 table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; table-layout: fixed; }
 col.c1 { width: 58%; } col.c2 { width: 14%; } col.c3 { width: 28%; }
@@ -61,10 +69,10 @@ td.num { white-space: nowrap; font-variant-numeric: tabular-nums; }
 .st-uploading::before, .st-hashing::before { background: var(--kadence-light-orange); }
 .st-failed::before { background: var(--kadence-watermelon-red); }
 
-.loghead { display: flex; justify-content: space-between; align-items: baseline; margin: 32px 0 8px; }
+.loghead { display: flex; justify-content: space-between; align-items: baseline; margin: 24px 0 8px; }
 .loghead .sub { font-weight: 600; }
 .loghead .row { gap: 16px; }
-#log { background: #fff; color: var(--panel-text); border-radius: 6px; max-height: 280px; overflow: auto; font-size: 13px; }
+#log { background: #fff; color: var(--panel-text); border-radius: 6px; flex: 1; min-height: 96px; overflow: auto; font-size: 13px; }
 #log div { display: grid; grid-template-columns: 66px 1fr; gap: 10px; padding: 6px 12px; border-left: 3px solid transparent; border-top: 1px solid var(--panel-line); }
 #log div:first-child { border-top: 0; }
 #log .t { color: var(--panel-muted); font-variant-numeric: tabular-nums; }
@@ -72,8 +80,21 @@ td.num { white-space: nowrap; font-variant-numeric: tabular-nums; }
 #log .error { border-left-color: var(--kadence-watermelon-red); background: var(--kadence-watermelon-red-12); }
 #log .ok { border-left-color: var(--kadence-green); }
 
-footer { margin-top: 64px; font-size: 12px; font-weight: 300; color: var(--muted); }
+footer { margin-top: 16px; font-size: 12px; font-weight: 300; color: var(--muted); }
 footer button.link { font-size: 12px; margin-left: 6px; }
+@media (max-height: 500px) {
+  html, body { height: auto; overflow: auto; }
+  main { height: auto; min-height: 100vh; }
+  .app { flex: none; }
+}
+@media (max-width: 820px) {
+  html, body { height: auto; overflow: auto; }
+  main { height: auto; padding: 32px 20px 28px; }
+  .app { display: block; }
+  .progress { margin-top: 36px; }
+  #log { flex: none; max-height: 280px; }
+  .filesWrap { max-height: 40vh; }
+}
 [hidden] { display: none !important; }
 </style>
 </head>
@@ -95,43 +116,50 @@ footer button.link { font-size: 12px; margin-left: 6px; }
     </form>
   </section>
 
-  <section id="appView" hidden>
-    <div id="compat" class="msg warn" hidden>This browser cannot read local folders. Open this page in Chrome or Edge on a desktop computer.</div>
+  <section id="appView" class="app" hidden>
+    <div class="setup">
+      <div id="compat" class="msg warn" hidden>This browser cannot read local folders. Open this page in Chrome or Edge on a desktop computer.</div>
 
-    <div class="field">
-      <label>Folder</label>
-      <div class="row"><button id="pickFolder">Choose folder</button><span id="folderName" class="muted">The folder that holds the dated subfolders</span></div>
-    </div>
-    <div class="field" id="dateField" hidden>
-      <label for="dateSelect">Date</label>
-      <select id="dateSelect" disabled></select>
-    </div>
-    <p id="scanInfo" class="muted small"></p>
-
-    <div class="row">
-      <button id="start" disabled>Start upload</button>
-      <button id="cancel" hidden>Cancel</button>
-    </div>
-
-    <div id="runView" hidden>
-      <div id="phase" class="phase"></div>
-      <div class="bar"><i id="bar"></i></div>
-      <p id="statline" class="muted small"></p>
-
-      <details id="filesBox">
-        <summary>Files <span id="fileCount" class="muted"></span></summary>
-        <table>
-          <colgroup><col class="c1"><col class="c2"><col class="c3"></colgroup>
-          <tbody id="rows"></tbody>
-        </table>
-        <p id="rowsNote" class="muted small"></p>
-      </details>
-
-      <div class="loghead">
-        <span class="sub">Log</span>
-        <span class="row"><button id="dlLog" class="link">Download log</button><button id="dlCsv" class="link">Download report</button></span>
+      <div class="field">
+        <label>Folder</label>
+        <div class="row"><button id="pickFolder">Choose folder</button><span id="folderName" class="muted">The folder that holds the dated subfolders</span></div>
       </div>
-      <div id="log" role="log" aria-live="polite"></div>
+      <div class="field" id="dateField" hidden>
+        <label for="dateSelect">Date</label>
+        <select id="dateSelect" disabled></select>
+      </div>
+      <p id="scanInfo" class="muted small"></p>
+
+      <div class="row">
+        <button id="start" disabled>Start upload</button>
+        <button id="cancel" hidden>Cancel</button>
+      </div>
+    </div>
+
+    <div class="progress">
+      <p id="idleNote" class="muted">Progress appears here once the upload starts.</p>
+      <div id="runView" hidden>
+        <div id="phase" class="phase"></div>
+        <div class="bar"><i id="bar"></i></div>
+        <p id="statline" class="muted small"></p>
+
+        <details id="filesBox">
+          <summary>Files <span id="fileCount" class="muted"></span></summary>
+          <div class="filesWrap">
+            <table>
+              <colgroup><col class="c1"><col class="c2"><col class="c3"></colgroup>
+              <tbody id="rows"></tbody>
+            </table>
+          </div>
+          <p id="rowsNote" class="muted small"></p>
+        </details>
+
+        <div class="loghead">
+          <span class="sub">Log</span>
+          <span class="row"><button id="dlLog" class="link">Download log</button><button id="dlCsv" class="link">Download report</button></span>
+        </div>
+        <div id="log" role="log" aria-live="polite"></div>
+      </div>
     </div>
   </section>
 
@@ -308,11 +336,17 @@ const idp = (op, body) => cognitoCall("cognito-idp", `AWSCognitoIdentityProvider
 const identity = (op, body) => cognitoCall("cognito-identity", `AWSCognitoIdentityService.${op}`, body);
 const providerKey = `cognito-idp.${CFG.region}.amazonaws.com/${CFG.userPoolId}`;
 
+// Browsers can block storage (strict privacy settings); the page must still work, just without remembering the sign-in.
+const store = {
+  get: (k) => { try { return sessionStorage.getItem(k); } catch { return null; } },
+  set: (k, v) => { try { sessionStorage.setItem(k, v); } catch {} },
+  clear: () => { try { sessionStorage.clear(); } catch {} }
+};
 function setTokens(r, email) {
   const a = r.AuthenticationResult;
   tokens = { id: a.IdToken, refresh: a.RefreshToken || tokens?.refresh, exp: jwt(a.IdToken).exp * 1000, email };
-  sessionStorage.setItem("lau_refresh", tokens.refresh);
-  sessionStorage.setItem("lau_email", email);
+  store.set("lau_refresh", tokens.refresh);
+  store.set("lau_email", email);
 }
 async function getIdToken() {
   if (!tokens) throw new Error("Not signed in");
@@ -386,7 +420,7 @@ $("newPwForm").addEventListener("submit", async (e) => {
 });
 $("signOut").onclick = () => {
   if (state.running && !confirm("An upload is running. Sign out and stop it?")) return;
-  ac?.abort(); tokens = null; sessionStorage.clear(); location.reload();
+  ac?.abort(); tokens = null; store.clear(); location.reload();
 };
 
 /* ---------- Folder and date selection ---------- */
@@ -587,7 +621,7 @@ $("cancel").onclick = () => {
 $("start").onclick = async () => {
   if (state.running) return;
   state.running = true; ac = new AbortController(); logs.length = 0; $("log").replaceChildren();
-  $("runView").hidden = false; $("filesBox").open = false; $("start").hidden = true; $("cancel").hidden = false; updateButtons();
+  $("runView").hidden = false; $("idleNote").hidden = true; $("filesBox").open = false; $("start").hidden = true; $("cancel").hidden = false; updateButtons();
   $("pickFolder").disabled = true; $("dateSelect").disabled = true;
   speed = 0; lastBytes = 0; lastT = Date.now(); startedAt = Date.now();
   let wake = null; try { wake = await navigator.wakeLock?.request("screen"); } catch {}
@@ -663,12 +697,12 @@ window.addEventListener("error", (e) => {
   if ([CFG.userPoolId, CFG.clientId, CFG.identityPoolId].some((v) => v.startsWith("REPLACE"))) {
     showAuth("This page is not configured yet. Fill in the Cognito IDs in the CFG block at the top of the script."); $("signInForm").hidden = true; return;
   }
-  const refresh = sessionStorage.getItem("lau_refresh"), email = sessionStorage.getItem("lau_email");
+  const refresh = store.get("lau_refresh"), email = store.get("lau_email");
   if (refresh && email) {
     try {
       tokens = { refresh, email, exp: 0, id: "" };
       await getIdToken(); showApp(email); return;
-    } catch { tokens = null; sessionStorage.clear(); }
+    } catch { tokens = null; store.clear(); }
   }
   showAuth();
 })();
