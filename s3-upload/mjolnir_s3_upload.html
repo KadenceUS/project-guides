@@ -29,12 +29,13 @@ label { display: block; font-size: 12px; font-weight: 500; color: var(--muted); 
 input, select { font: inherit; width: 100%; max-width: 340px; padding: 10px 12px; border: 1px solid var(--field-line); border-radius: 6px; background: rgba(255, 255, 255, .08); color: #fff; color-scheme: dark; }
 input:-webkit-autofill { -webkit-text-fill-color: #fff; box-shadow: 0 0 0 100px #3a3a43 inset; caret-color: #fff; }
 select option { color: var(--panel-text); background: #fff; }
-button { font: 700 14px var(--kadence-font); padding: 10px 18px; border-radius: 6px; border: 1px solid var(--kadence-green); background: var(--kadence-green); color: #fff; cursor: pointer; filter: brightness(1.15); transition: filter .15s; }
-button:hover:not(:disabled) { filter: brightness(1.22); }
-button.primary { font-weight: 700; }
-button:disabled { background: rgba(255, 255, 255, .12); border-color: rgba(255, 255, 255, .12); color: rgba(255, 255, 255, .4); filter: none; cursor: not-allowed; }
+button { font: 700 14px var(--kadence-font); padding: 10px 18px; border-radius: 6px; border: 1px solid rgba(255, 255, 255, .55); background: transparent; color: #fff; cursor: pointer; transition: filter .15s, background .15s, border-color .15s; }
+button:hover:not(:disabled) { border-color: #fff; background: rgba(255, 255, 255, .08); }
+button.primary { background: var(--kadence-green); border-color: var(--kadence-green); filter: brightness(1.15); }
+button.primary:hover:not(:disabled) { background: var(--kadence-green); border-color: var(--kadence-green); filter: brightness(1.22); }
+button:disabled, button.primary:disabled { background: rgba(255, 255, 255, .12); border-color: rgba(255, 255, 255, .12); color: rgba(255, 255, 255, .4); filter: none; cursor: not-allowed; }
 button.link { border: 0; padding: 0; background: none; color: #fff; font-weight: 400; font-size: 13px; text-decoration: underline; text-underline-offset: 3px; filter: none; }
-button.link:hover:not(:disabled) { color: var(--kadence-tangerine); filter: none; }
+button.link:hover:not(:disabled) { color: var(--kadence-tangerine); background: none; filter: none; }
 :focus-visible { outline: 2px solid var(--kadence-tangerine); outline-offset: 2px; }
 #scanInfo { margin: -14px 0 26px; }
 .msg { padding: 12px 14px; margin-bottom: 24px; font-size: 14px; color: var(--panel-text); border-left: 3px solid var(--kadence-watermelon-red); background: var(--kadence-watermelon-red-12); border-radius: 0 6px 6px 0; }
@@ -108,7 +109,7 @@ footer button.link { font-size: 12px; margin-left: 6px; }
     <p id="scanInfo" class="muted small"></p>
 
     <div class="row">
-      <button id="start" class="primary" disabled>Start upload</button>
+      <button id="start" disabled>Start upload</button>
       <button id="cancel" hidden>Cancel</button>
     </div>
 
@@ -213,6 +214,15 @@ const CFG = {
 
 const $ = (id) => document.getElementById(id);
 const state = { root: null, dates: [], files: [], items: [], filter: "active", running: false, scanToken: 0, user: null };
+function updateButtons() {
+  let primary = null;
+  if (!state.running && !state.scanning) {
+    if (!state.root) primary = "pickFolder";
+    else if ($("start").disabled) primary = "pickFolder";
+    else primary = state.lastRun === "ok" ? null : "start";
+  }
+  ["pickFolder", "start", "cancel"].forEach((id) => $(id).classList.toggle("primary", id === primary));
+}
 let s3 = null, ac = null, tokens = null, pendingChallenge = null;
 const logs = [];
 const activeUploads = new Set();
@@ -331,7 +341,7 @@ function buildClient() {
   s3 = new S3Client({ region: CFG.region, credentials: getCredentials });
 }
 function showApp(email) {
-  state.user = email;
+  state.user = email; updateButtons();
   $("authView").hidden = true; $("appView").hidden = false;
   $("who").hidden = false; $("whoName").textContent = email;
   buildClient();
@@ -384,7 +394,7 @@ if (!window.showDirectoryPicker) { $("compat").hidden = false; $("pickFolder").d
 $("pickFolder").onclick = async () => {
   try { state.root = await window.showDirectoryPicker({ mode: "read" }); }
   catch (e) { if (e.name === "AbortError") return; log("error", explain(e)); return; }
-  $("folderName").textContent = state.root.name; $("folderName").classList.remove("muted");
+  $("folderName").textContent = state.root.name; $("folderName").classList.remove("muted"); state.lastRun = null;
   const dates = [];
   for await (const [name, h] of state.root.entries()) {
     if (h.kind === "directory" && /^\d{8}$/.test(name)) dates.push({ name, handle: h });
@@ -398,7 +408,7 @@ $("pickFolder").onclick = async () => {
   if (!dates.length) {
     sel.append(new Option("No dated folders found", "")); sel.disabled = true;
     $("scanInfo").textContent = "No subfolders named like 20261006 in that folder. Choose a different one.";
-    $("start").disabled = true; return;
+    $("start").disabled = true; updateButtons(); return;
   }
   dates.forEach((d) => sel.append(new Option(prettyDate(d.name), d.name)));
   const t = today();
@@ -407,7 +417,7 @@ $("pickFolder").onclick = async () => {
   state.note = sel.value !== t ? "No folder for today, so the latest date is selected." : "";
   scanSelected();
 };
-$("dateSelect").onchange = () => { state.note = ""; scanSelected(); };
+$("dateSelect").onchange = () => { state.note = ""; state.lastRun = null; scanSelected(); };
 
 async function walk(dir, prefix, out) {
   for await (const [name, h] of dir.entries()) {
@@ -424,11 +434,11 @@ async function walk(dir, prefix, out) {
 async function scanSelected() {
   const token = ++state.scanToken;
   const date = $("dateSelect").value;
-  $("start").disabled = true;
+  $("start").disabled = true; state.scanning = true; updateButtons();
   $("scanInfo").textContent = "Counting files...";
   const d = state.dates.find((x) => x.name === date);
   const out = [];
-  try { await walk(d.handle, "", out); } catch (e) { $("scanInfo").textContent = explain(e); return; }
+  try { await walk(d.handle, "", out); } catch (e) { $("scanInfo").textContent = explain(e); state.scanning = false; updateButtons(); return; }
   if (token !== state.scanToken) return;
   state.date = date; state.files = out;
   const total = out.reduce((a, f) => a + f.size, 0);
@@ -436,6 +446,7 @@ async function scanSelected() {
     ? `${out.length} files, ${fmtBytes(total)}. Uploads to ${CFG.prefix}/${date}/.${state.note ? " " + state.note : ""}`
     : "This folder has no files to upload.";
   $("start").disabled = !out.length || state.running;
+  state.scanning = false; updateButtons();
 }
 
 /* ---------- Run ---------- */
@@ -575,7 +586,7 @@ $("cancel").onclick = () => {
 $("start").onclick = async () => {
   if (state.running) return;
   state.running = true; ac = new AbortController(); logs.length = 0; $("log").replaceChildren();
-  $("runView").hidden = false; $("filesBox").open = false; $("start").hidden = true; $("cancel").hidden = false;
+  $("runView").hidden = false; $("filesBox").open = false; $("start").hidden = true; $("cancel").hidden = false; updateButtons();
   $("pickFolder").disabled = true; $("dateSelect").disabled = true;
   speed = 0; lastBytes = 0; lastT = Date.now(); startedAt = Date.now();
   let wake = null; try { wake = await navigator.wakeLock?.request("screen"); } catch {}
@@ -635,6 +646,7 @@ $("start").onclick = async () => {
   try { await wake?.release(); } catch {}
   state.running = false; $("cancel").hidden = true; $("start").hidden = false; $("start").disabled = false; $("start").textContent = "Upload again";
   if (summary.failed) $("filesBox").open = true;
+  state.lastRun = summary.failed || cancelled || fatal ? "attention" : "ok"; updateButtons();
   $("pickFolder").disabled = false; $("dateSelect").disabled = false;
   render();
 };
