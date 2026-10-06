@@ -3,94 +3,86 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>LA video upload</title>
+<title>Mjolnir LA S3 Upload</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --accent: #2D2A8C;
-    --accent-soft: #ecebf8;
-    --ink: #1b1b24;
-    --muted: #666676;
-    --line: #e3e3ec;
-    --bg: #fafafc;
-    --ok: #1f7a4d;
-    --warn: #9a5b00;
-    --err: #b3261e;
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0; background: var(--bg); color: var(--ink);
-    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  }
-  main { max-width: 820px; margin: 0 auto; padding: 32px 20px 80px; }
-  header { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 28px; }
-  h1 { font-size: 22px; margin: 0; font-weight: 650; color: var(--accent); }
-  h2 { font-size: 15px; margin: 0 0 8px; font-weight: 650; }
-  section { margin-bottom: 28px; }
-  .muted { color: var(--muted); }
-  .small { font-size: 13px; }
-  .row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-  .field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 14px; max-width: 360px; }
-  label { font-size: 13px; color: var(--muted); }
-  input[type=email], input[type=password], select {
-    font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--ink);
-  }
-  select { min-width: 260px; }
-  button {
-    font: inherit; padding: 8px 14px; border-radius: 6px; border: 1px solid var(--line);
-    background: #fff; color: var(--ink); cursor: pointer;
-  }
-  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-  button:disabled { opacity: .45; cursor: not-allowed; }
-  button.link { border: 0; background: none; padding: 0; color: var(--accent); text-decoration: underline; }
-  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .dest { padding: 10px 12px; background: var(--accent-soft); border-radius: 6px; word-break: break-all; font-size: 13px; }
-  .check { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; color: var(--ink); }
-  .check input { margin-top: 4px; }
-  .msg { padding: 10px 12px; border-radius: 6px; font-size: 14px; margin-bottom: 14px; }
-  .msg.err { background: #fbeceb; color: var(--err); }
-  .msg.warn { background: #fdf3e3; color: var(--warn); }
-  hr { border: 0; border-top: 1px solid var(--line); margin: 28px 0; }
+:root {
+  --kadence-green: #70A143; --kadence-tangerine: #F26A2C; --kadence-light-orange: #F99B28; --kadence-watermelon-red: #F94E4B;
+  --kadence-black: #231F20; --kadence-midnight-grey: #2C2C33;
+  --kadence-light-orange-12: #FEF3E5; --kadence-watermelon-red-12: #FEEAE9;
+  --kadence-font: 'Montserrat', Arial, sans-serif; --kadence-dot: var(--kadence-green);
+  --muted: rgba(255, 255, 255, .72); --line: rgba(255, 255, 255, .2); --field-line: rgba(255, 255, 255, .34);
+  --panel-text: #2C2C33; --panel-muted: rgba(44, 44, 51, .62); --panel-line: rgba(35, 31, 32, .1);
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--kadence-midnight-grey); color: #fff; font: 400 15px/1.55 var(--kadence-font); }
+main { max-width: 600px; margin: 0 auto; padding: 56px 24px 48px; }
+h1 { font-size: 30px; font-weight: 700; line-height: 1.2; margin: 0 0 40px; letter-spacing: -.01em; color: #fff; }
+.dot { color: var(--kadence-dot); }
+.muted { color: var(--muted); }
+.small { font-size: 13px; }
+.row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.field { margin-bottom: 26px; }
+label { display: block; font-size: 12px; font-weight: 500; color: var(--muted); margin-bottom: 6px; }
+input, select { font: inherit; width: 100%; max-width: 340px; padding: 10px 12px; border: 1px solid var(--field-line); border-radius: 6px; background: rgba(255, 255, 255, .08); color: #fff; color-scheme: dark; }
+input:-webkit-autofill { -webkit-text-fill-color: #fff; box-shadow: 0 0 0 100px #3a3a43 inset; caret-color: #fff; }
+select option { color: var(--panel-text); background: #fff; }
+button { font: 500 14px var(--kadence-font); padding: 10px 18px; border-radius: 6px; border: 1px solid rgba(255, 255, 255, .5); background: transparent; color: #fff; cursor: pointer; }
+button:hover { border-color: #fff; }
+button.primary { background: #fff; border-color: #fff; color: var(--kadence-midnight-grey); font-weight: 700; }
+button.primary:hover { background: rgba(255, 255, 255, .88); }
+button:disabled { opacity: .4; cursor: not-allowed; }
+button.link { border: 0; padding: 0; background: none; font-weight: 400; font-size: 13px; text-decoration: underline; text-underline-offset: 3px; }
+button.link:hover { color: var(--kadence-tangerine); }
+:focus-visible { outline: 2px solid var(--kadence-tangerine); outline-offset: 2px; }
+#scanInfo { margin: -14px 0 26px; }
+.msg { padding: 12px 14px; margin-bottom: 24px; font-size: 14px; color: var(--panel-text); border-left: 3px solid var(--kadence-watermelon-red); background: var(--kadence-watermelon-red-12); border-radius: 0 6px 6px 0; }
+.msg.warn { border-left-color: var(--kadence-light-orange); background: var(--kadence-light-orange-12); }
 
-  .bar { height: 8px; background: var(--line); border-radius: 4px; overflow: hidden; }
-  .bar > i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .2s; }
-  .stats { display: flex; gap: 28px; flex-wrap: wrap; margin: 14px 0 6px; }
-  .stat b { display: block; font-size: 18px; font-variant-numeric: tabular-nums; }
-  .stat span { font-size: 12px; color: var(--muted); }
-  .stat.bad b { color: var(--err); }
+#runView { margin-top: 44px; }
+.phase { font-weight: 600; margin-bottom: 10px; }
+.bar { height: 6px; background: rgba(255, 255, 255, .22); border-radius: 3px; overflow: hidden; }
+.bar > i { display: block; height: 100%; width: 0; background: var(--kadence-green); transition: width .25s; }
+#statline { margin: 10px 0 0; }
+.failed { font-weight: 600; color: #fff; }
+.failed::before, .st::before { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 7px; background: var(--kadence-watermelon-red); }
 
-  .tabs { display: flex; gap: 6px; margin: 18px 0 8px; }
-  .tabs button { padding: 4px 10px; font-size: 13px; }
-  .tabs button[aria-pressed=true] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th { text-align: left; font-weight: 600; color: var(--muted); padding: 6px 8px; border-bottom: 1px solid var(--line); }
-  td { padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: middle; }
-  td.name { word-break: break-all; }
-  td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
-  .st-done { color: var(--ok); } .st-failed { color: var(--err); } .st-skipped, .st-cancelled { color: var(--muted); }
-  .mini { height: 4px; background: var(--line); border-radius: 2px; margin-top: 4px; width: 90px; }
-  .mini > i { display: block; height: 100%; background: var(--accent); border-radius: 2px; }
+details { margin-top: 28px; }
+summary { cursor: pointer; font-weight: 600; font-size: 15px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; table-layout: fixed; }
+col.c1 { width: 58%; } col.c2 { width: 14%; } col.c3 { width: 28%; }
+td { padding: 7px 6px 7px 0; border-top: 1px solid var(--line); vertical-align: top; }
+td.name { word-break: break-all; }
+td.num { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.st::before { background: rgba(255, 255, 255, .45); }
+.st-done::before { background: var(--kadence-green); }
+.st-uploading::before, .st-hashing::before { background: var(--kadence-light-orange); }
+.st-failed::before { background: var(--kadence-watermelon-red); }
 
-  #log { border: 1px solid var(--line); background: #fff; border-radius: 6px; max-height: 320px; overflow: auto; font-size: 13px; }
-  #log div { display: grid; grid-template-columns: 74px 1fr; gap: 10px; padding: 4px 10px; border-bottom: 1px solid var(--line); border-left: 3px solid transparent; }
-  #log div:last-child { border-bottom: 0; }
-  #log .t { color: var(--muted); font-variant-numeric: tabular-nums; }
-  #log .warn { border-left-color: var(--warn); background: #fffaf0; }
-  #log .error { border-left-color: var(--err); background: #fff6f5; }
-  #log .ok { border-left-color: var(--ok); }
-  .head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 22px 0 8px; flex-wrap: wrap; }
-  .head h2 { margin: 0; }
-  [hidden] { display: none !important; }
+.loghead { display: flex; justify-content: space-between; align-items: baseline; margin: 32px 0 8px; }
+.loghead .sub { font-weight: 600; }
+.loghead .row { gap: 16px; }
+#log { background: #fff; color: var(--panel-text); border-radius: 6px; max-height: 280px; overflow: auto; font-size: 13px; }
+#log div { display: grid; grid-template-columns: 66px 1fr; gap: 10px; padding: 6px 12px; border-left: 3px solid transparent; border-top: 1px solid var(--panel-line); }
+#log div:first-child { border-top: 0; }
+#log .t { color: var(--panel-muted); font-variant-numeric: tabular-nums; }
+#log .warn { border-left-color: var(--kadence-light-orange); background: var(--kadence-light-orange-12); }
+#log .error { border-left-color: var(--kadence-watermelon-red); background: var(--kadence-watermelon-red-12); }
+#log .ok { border-left-color: var(--kadence-green); }
+
+footer { margin-top: 64px; font-size: 12px; font-weight: 300; color: var(--muted); }
+footer button.link { font-size: 12px; margin-left: 6px; }
+[hidden] { display: none !important; }
 </style>
 </head>
 <body>
 <main>
-  <header>
-    <h1>LA video upload</h1>
-    <div id="who" class="small muted" hidden><span id="whoName"></span> <button id="signOut" class="link">Sign out</button></div>
-  </header>
+  <h1>Mjolnir LA S3 Upload<span class="dot">.</span></h1>
 
   <section id="authView" hidden>
-    <div id="authMsg" class="msg err" hidden></div>
+    <div id="authMsg" class="msg" hidden></div>
     <form id="signInForm">
       <div class="field"><label for="email">Email</label><input id="email" type="email" autocomplete="username" required></div>
       <div class="field"><label for="password">Password</label><input id="password" type="password" autocomplete="current-password" required></div>
@@ -99,35 +91,22 @@
     <form id="newPwForm" hidden>
       <p class="muted">Choose a new password to finish setting up your account.</p>
       <div class="field"><label for="newPw">New password</label><input id="newPw" type="password" autocomplete="new-password" required></div>
-      <button class="primary" type="submit">Save password and sign in</button>
+      <button class="primary" type="submit">Save and sign in</button>
     </form>
   </section>
 
   <section id="appView" hidden>
     <div id="compat" class="msg warn" hidden>This browser cannot read local folders. Open this page in Chrome or Edge on a desktop computer.</div>
 
-    <section>
-      <h2>Source folder</h2>
-      <div class="row">
-        <button id="pickFolder">Choose folder</button>
-        <span id="folderName" class="muted">No folder selected</span>
-      </div>
-      <p class="small muted" style="margin:6px 0 0">Choose the folder that contains the dated subfolders, such as 20261005.</p>
-    </section>
-
-    <section>
-      <div class="field">
-        <label for="dateSelect">Date to upload</label>
-        <select id="dateSelect" disabled><option>Choose a folder first</option></select>
-      </div>
-      <div id="scanInfo" class="small muted"></div>
-    </section>
-
-    <section>
-      <h2>Destination</h2>
-      <div class="dest" id="dest"></div>
-    </section>
-
+    <div class="field">
+      <label>Folder</label>
+      <div class="row"><button id="pickFolder">Choose folder</button><span id="folderName" class="muted">The folder that holds the dated subfolders</span></div>
+    </div>
+    <div class="field" id="dateField" hidden>
+      <label for="dateSelect">Date</label>
+      <select id="dateSelect" disabled></select>
+    </div>
+    <p id="scanInfo" class="muted small"></p>
 
     <div class="row">
       <button id="start" class="primary" disabled>Start upload</button>
@@ -135,44 +114,32 @@
     </div>
 
     <div id="runView" hidden>
-      <hr>
-      <div id="phase" style="font-weight:600;margin-bottom:8px"></div>
+      <div id="phase" class="phase"></div>
       <div class="bar"><i id="bar"></i></div>
-      <div class="stats">
-        <div class="stat"><b id="sUp">0</b><span>Uploaded</span></div>
-        <div class="stat"><b id="sSkip">0</b><span>Skipped</span></div>
-        <div class="stat bad"><b id="sFail">0</b><span>Failed</span></div>
-        <div class="stat"><b id="sData">0 B</b><span>Sent</span></div>
-        <div class="stat"><b id="sSpeed">-</b><span>Speed</span></div>
-        <div class="stat"><b id="sEta">-</b><span>Time left</span></div>
-      </div>
+      <p id="statline" class="muted small"></p>
 
-      <div class="head"><h2>Files</h2></div>
-      <div class="tabs" id="tabs">
-        <button data-f="active" aria-pressed="true">In progress</button>
-        <button data-f="failed" aria-pressed="false">Failed</button>
-        <button data-f="all" aria-pressed="false">All</button>
-      </div>
-      <table>
-        <thead><tr><th>File</th><th class="num">Size</th><th>Status</th></tr></thead>
-        <tbody id="rows"></tbody>
-      </table>
-      <p id="rowsNote" class="small muted"></p>
+      <details id="filesBox">
+        <summary>Files <span id="fileCount" class="muted"></span></summary>
+        <table>
+          <colgroup><col class="c1"><col class="c2"><col class="c3"></colgroup>
+          <tbody id="rows"></tbody>
+        </table>
+        <p id="rowsNote" class="muted small"></p>
+      </details>
 
-      <div class="head">
-        <h2>Log</h2>
-        <div class="row">
-          <select id="logLevel" style="min-width:0"><option value="all">All messages</option><option value="problems">Warnings and errors</option></select>
-          <button id="dlLog" class="small">Download log</button>
-          <button id="dlCsv" class="small">Download file report</button>
-        </div>
+      <div class="loghead">
+        <span class="sub">Log</span>
+        <span class="row"><button id="dlLog" class="link">Download log</button><button id="dlCsv" class="link">Download report</button></span>
       </div>
       <div id="log" role="log" aria-live="polite"></div>
     </div>
   </section>
+
+  <footer id="who" hidden><span id="whoName"></span><button id="signOut" class="link">Sign out</button></footer>
 </main>
 
 <script>
+
 (()=>{var MS=Object.create;var Gn=Object.defineProperty;var HS=Object.getOwnPropertyDescriptor;var GS=Object.getOwnPropertyNames;var OS=Object.getPrototypeOf,vS=Object.prototype.hasOwnProperty;var qS=(t,e,A)=>e in t?Gn(t,e,{enumerable:!0,configurable:!0,writable:!0,value:A}):t[e]=A;var w=(t,e,A)=>()=>{if(A)throw A[0];try{return t&&(e=t(t=0)),e}catch(i){throw A=[i],i}};var ue=(t,e)=>()=>{try{return e||t((e={exports:{}}).exports,e),e.exports}catch(A){throw e=0,A}},_S=(t,e)=>{for(var A in e)Gn(t,A,{get:e[A],enumerable:!0})},TS=(t,e,A,i)=>{if(e&&typeof e=="object"||typeof e=="function")for(let r of GS(e))!vS.call(t,r)&&r!==A&&Gn(t,r,{get:()=>e[r],enumerable:!(i=HS(e,r))||i.enumerable});return t};var oi=(t,e,A)=>(A=t!=null?MS(OS(t)):{},TS(e||!t||!t.__esModule?Gn(A,"default",{value:t,enumerable:!0}):A,t));var u=(t,e,A)=>qS(t,typeof e!="symbol"?e+"":e,A);var si,of=w(()=>{(function(t){t.HTTP="http",t.HTTPS="https"})(si||(si={}))});var EA,nf=w(()=>{(function(t){t.MD5="md5",t.CRC32="crc32",t.CRC32C="crc32c",t.SHA1="sha1",t.SHA256="sha256"})(EA||(EA={}))});var sf=w(()=>{nf()});var ai,af=w(()=>{ai="__smithy_context"});var to=w(()=>{of();sf();af()});var We,If=w(()=>{to();We=t=>t[ai]||(t[ai]={})});function _(t,e){return Object.prototype.hasOwnProperty.call(t,e)}var nc=w(()=>{});function PS(t){return Object.keys(t).reduce((e,A)=>{let i=t[A];return{...e,[A]:Array.isArray(i)?[...i]:i}},{})}var T,cf=w(()=>{T=class t{constructor(e){u(this,"method");u(this,"protocol");u(this,"hostname");u(this,"port");u(this,"path");u(this,"query");u(this,"headers");u(this,"username");u(this,"password");u(this,"fragment");u(this,"body");this.method=e.method||"GET",this.hostname=e.hostname||"localhost",this.port=e.port,this.query=e.query||{},this.headers=e.headers||{},this.body=e.body,this.protocol=e.protocol?e.protocol.slice(-1)!==":"?`${e.protocol}:`:e.protocol:"https:",this.path=e.path?e.path.charAt(0)!=="/"?`/${e.path}`:e.path:"/",this.username=e.username,this.password=e.password,this.fragment=e.fragment}static clone(e){let A=new t({...e,headers:{...e.headers}});return A.query&&(A.query=PS(A.query)),A}static isInstance(e){if(!e)return!1;let A=e;return"method"in A&&"protocol"in A&&"hostname"in A&&"path"in A&&typeof A.query=="object"&&typeof A.headers=="object"}clone(){return t.clone(this)}}});var Ue,gf=w(()=>{Ue=class{constructor(e){u(this,"statusCode");u(this,"reason");u(this,"headers");u(this,"body");this.statusCode=e.statusCode,this.reason=e.reason,this.headers=e.headers||{},this.body=e.body}static isInstance(e){if(!e)return!1;let A=e;return typeof A.statusCode=="number"&&typeof A.headers=="object"}}});var LS,Kt,Bf=w(()=>{LS=new RegExp("^(?!.*-$)(?!-)[a-zA-Z0-9-]{1,63}$"),Kt=(t,e=!1)=>{if(!e)return LS.test(t);let A=t.split(".");for(let i of A)if(!Kt(i))return!1;return!0}});function sc(t){return/^[a-z0-9][a-z0-9.-]*[a-z0-9]$/.test(t)}var Cf=w(()=>{});var be,uf=w(()=>{be=t=>{if(typeof t=="function")return t;let e=Promise.resolve(t);return()=>e}});function ff(t){let e={};if(t=t.replace(/^\?/,""),t)for(let A of t.split("&")){let[i,r=null]=A.split("=");i=decodeURIComponent(i),r&&(r=decodeURIComponent(r)),i in e?Array.isArray(e[i])?e[i].push(r):e[i]=[e[i],r]:e[i]=r}return e}var df=w(()=>{});var GA,ac=w(()=>{df();GA=t=>{if(typeof t=="string")return GA(new URL(t));let{hostname:e,pathname:A,port:i,protocol:r,search:o}=t,n;return o&&(n=ff(o)),{hostname:e,port:i?parseInt(i):void 0,protocol:r,path:A,query:n}}});var Ht,Ef=w(()=>{nc();ac();Ht=t=>{if(typeof t=="object"){if("url"in t){let e=GA(t.url);if(t.headers){e.headers={};for(let A in t.headers)_(t.headers,A)&&(e.headers[A.toLowerCase()]=t.headers[A].join(", "))}return e}return t}return GA(t)}});var re=w(()=>{If();nc();cf();gf();Bf();Cf();uf();ac();Ef()});var vn,Qf=w(()=>{vn=t=>typeof t=="function"?t():t});var qn,cc=w(()=>{qn=(t,e,A,i,r)=>({name:e,namespace:t,traits:A,input:i,output:r})});var lf,gc,hf=w(()=>{re();cc();lf=t=>(e,A)=>async i=>{let{response:r}=await e(i),{operationSchema:o}=We(A),[,n,a,c,B,C]=o??[];try{let f=await t.protocol.deserializeResponse(qn(n,a,c,B,C),{...t,...A},r);return{response:r,output:f}}catch(f){if(Object.defineProperty(f,"$response",{value:r,enumerable:!1,writable:!1,configurable:!1}),!("$metadata"in f)){let d="Deserialization error: to see the raw response, inspect the hidden field {error}.$response on this object.";try{f.message+=`
   `+d}catch{!A.logger||A.logger?.constructor?.name==="NoOpLogger"?console.warn(d):A.logger?.warn?.(d)}typeof f.$responseBodyText<"u"&&f.$response&&(f.$response.body=f.$responseBodyText);try{if(Ue.isInstance(r)){let{headers:E={},statusCode:Q}=r,l=Object.entries(E);f.$metadata={httpStatusCode:Q,requestId:gc(/^x-[\w-]+-request-?id$/,l),extendedRequestId:gc(/^x-[\w-]+-id-2$/,l),cfId:gc(/^x-[\w-]+-cf-id$/,l)}}}catch{}}throw f}},gc=(t,e)=>(e.find(([A])=>A.match(t))||[void 0,void 0])[1]});var pf,mf=w(()=>{re();cc();pf=t=>(e,A)=>async i=>{let{operationSchema:r}=We(A),[,o,n,a,c,B]=r??[],C=A.endpointV2?async()=>Ht(A.endpointV2):t.endpoint,f=await t.protocol.serializeRequest(qn(o,n,a,c,B),i.input,{...t,...A,endpoint:C});return e({...i,request:f})}});function Bc(t){return{applyToStack:e=>{e.add(pf(t),wf),e.add(lf(t),yf),t.protocol.setSerdeContext(t)}}}var yf,wf,Sf=w(()=>{hf();mf();yf={name:"deserializerMiddleware",step:"deserialize",tags:["DESERIALIZER"],override:!0},wf={name:"serializerMiddleware",step:"serialize",tags:["SERIALIZER"],override:!0}});function Yt(t){if(typeof t=="object")return t;if(t=t|0,_n[t])return _n[t];let e={},A=0;for(let i of["httpLabel","idempotent","idempotencyToken","sensitive","httpPayload","httpResponseCode","httpQueryParams"])(t>>A++&1)===1&&(e[i]=1);return _n[t]=e}var _n,Cc=w(()=>{_n=[]});function ro(t,e){if(t instanceof Y)return Object.assign(t,{memberName:e,_isMemberSchema:!0});let A=Y;return new A(t,e)}var io,Tn,Pn,OA,Y,uc,Df,Ff=w(()=>{Qf();Cc();io={it:Symbol.for("@smithy/nor-struct-it"),ns:Symbol.for("@smithy/ns")},Tn=[],Pn={},OA=class OA{constructor(e,A){u(this,"ref");u(this,"memberName");u(this,"symbol",OA.symbol);u(this,"name");u(this,"schema");u(this,"_isMemberSchema");u(this,"traits");u(this,"memberTraits");u(this,"normalizedTraits");this.ref=e,this.memberName=A;let i=[],r=e,o=e;for(this._isMemberSchema=!1;uc(r);)i.push(r[1]),r=r[0],o=vn(r),this._isMemberSchema=!0;if(i.length>0){this.memberTraits={};for(let n=i.length-1;n>=0;--n){let a=i[n];Object.assign(this.memberTraits,Yt(a))}}else this.memberTraits=0;if(o instanceof OA){let n=this.memberTraits;Object.assign(this,o),this.memberTraits=Object.assign({},n,o.getMemberTraits(),this.getMemberTraits()),this.normalizedTraits=void 0,this.memberName=A??o.memberName;return}if(this.schema=vn(o),Df(this.schema)?(this.name=`${this.schema[1]}#${this.schema[2]}`,this.traits=this.schema[3]):(this.name=this.memberName??String(o),this.traits=0),this._isMemberSchema&&!A)throw new Error(`@smithy/core/schema - NormalizedSchema member init ${this.getName(!0)} missing member name.`)}static[Symbol.hasInstance](e){let A=this.prototype.isPrototypeOf(e);return!A&&typeof e=="object"&&e!==null?e.symbol===this.symbol:A}static of(e){let A=typeof e=="function"||typeof e=="object"&&e!==null;if(typeof e=="number"){if(Tn[e])return Tn[e]}else if(typeof e=="string"){if(Pn[e])return Pn[e]}else if(A&&e[io.ns])return e[io.ns];let i=vn(e);if(i instanceof OA)return i;if(uc(i)){let[o,n]=i;if(o instanceof OA)return Object.assign(o.getMergedTraits(),Yt(n)),o;throw new Error(`@smithy/core/schema - may not init unwrapped member schema=${JSON.stringify(e,null,2)}.`)}let r=new OA(i);return A?e[io.ns]=r:typeof i=="string"?Pn[i]=r:typeof i=="number"?Tn[i]=r:r}getSchema(){let e=this.schema;return Array.isArray(e)&&e[0]===0?e[4]:e}getName(e=!1){let{name:A}=this;return!e&&A&&A.includes("#")?A.split("#")[1]:A||void 0}getMemberName(){return this.memberName}isMemberSchema(){return this._isMemberSchema}isListSchema(){let e=this.getSchema();return typeof e=="number"?e>=64&&e<128:e[0]===1}isMapSchema(){let e=this.getSchema();return typeof e=="number"?e>=128&&e<=255:e[0]===2}isStructSchema(){let e=this.getSchema();if(typeof e!="object")return!1;let A=e[0];return A===3||A===-3||A===4}isUnionSchema(){let e=this.getSchema();return typeof e!="object"?!1:e[0]===4}isBlobSchema(){let e=this.getSchema();return e===21||e===42}isTimestampSchema(){let e=this.getSchema();return typeof e=="number"&&e>=4&&e<=7}isUnitSchema(){return this.getSchema()==="unit"}isDocumentSchema(){return this.getSchema()===15}isStringSchema(){return this.getSchema()===0}isBooleanSchema(){return this.getSchema()===2}isNumericSchema(){return this.getSchema()===1}isBigIntegerSchema(){return this.getSchema()===17}isBigDecimalSchema(){return this.getSchema()===19}isStreaming(){let{streaming:e}=this.getMergedTraits();return!!e||this.getSchema()===42}isIdempotencyToken(){return!!this.getMergedTraits().idempotencyToken}getMergedTraits(){return this.normalizedTraits??(this.normalizedTraits={...this.getOwnTraits(),...this.getMemberTraits()})}getMemberTraits(){return Yt(this.memberTraits)}getOwnTraits(){return Yt(this.traits)}getKeySchema(){let[e,A]=[this.isDocumentSchema(),this.isMapSchema()];if(!e&&!A)throw new Error(`@smithy/core/schema - cannot get key for non-map: ${this.getName(!0)}`);let i=this.getSchema(),r=e?15:i[4]??0;return ro([r,0],"key")}getValueSchema(){let e=this.getSchema(),[A,i,r]=[this.isDocumentSchema(),this.isMapSchema(),this.isListSchema()],o=typeof e=="number"?63&e:e&&typeof e=="object"&&(i||r)?e[3+e[0]]:A?15:void 0;if(o!=null)return ro([o,0],i?"value":"member");throw new Error(`@smithy/core/schema - ${this.getName(!0)} has no value member.`)}getMemberSchema(e){let A=this.getSchema();if(this.isStructSchema()&&A[4].includes(e)){let i=A[4].indexOf(e),r=A[5][i];return ro(uc(r)?r:[r,0],e)}if(this.isDocumentSchema())return ro([15,0],e);throw new Error(`@smithy/core/schema - ${this.getName(!0)} has no member=${e}.`)}getMemberSchemas(){let e={};try{for(let[A,i]of this.structIterator())e[A]=i}catch{}return e}getEventStreamMember(){if(this.isStructSchema()){for(let[e,A]of this.structIterator())if(A.isStreaming()&&A.isStructSchema())return e}return""}*structIterator(){if(this.isUnitSchema())return;if(!this.isStructSchema())throw new Error("@smithy/core/schema - cannot iterate non-struct schema.");let e=this.getSchema(),A=e[4].length,i=e[io.it];if(i&&A===i.length){yield*i;return}i=Array(A);for(let r=0;r<A;++r){let o=e[4][r],n=ro([e[5][r],0],o);yield i[r]=[o,n]}e[io.it]=i}};u(OA,"symbol",Symbol.for("@smithy/nor"));Y=OA;uc=t=>Array.isArray(t)&&t.length===2,Df=t=>Array.isArray(t)&&t.length>=5});var zt,Qt,kf=w(()=>{zt=class zt{constructor(e,A=new Map,i=new Map){u(this,"namespace");u(this,"schemas");u(this,"exceptions");this.namespace=e,this.schemas=A,this.exceptions=i,zt.registries.has(e)||zt.registries.set(e,this)}static for(e){return zt.registries.get(e)??new zt(e)}copyFrom(e){let{schemas:A,exceptions:i}=this;for(let[r,o]of e.schemas)A.has(r)||A.set(r,o);for(let[r,o]of e.exceptions)i.has(r)||i.set(r,o)}register(e,A){let i=this.normalizeShapeId(e);for(let r of[this,zt.for(i.split("#")[0])])r.schemas.has(i)||r.schemas.set(i,A)}getSchema(e){let A=this.normalizeShapeId(e);if(!this.schemas.has(A)){if(!e.includes("#")){let i="#"+e,r=[];for(let[o,n]of this.schemas.entries())o.endsWith(i)&&r.push(n);if(r.length===1)return r[0]}throw new Error(`@smithy/core/schema - schema not found for ${A}`)}return this.schemas.get(A)}registerError(e,A){let i=e,r=i[1],o=r+"#"+i[2];A.hasOwnProperty?.("shapeId")||(A.shapeId=o);for(let n of[this,zt.for(r)])!n.schemas.has(o)&&!n.exceptions.has(i)&&(n.schemas.set(o,i),n.exceptions.set(i,A))}getErrorCtor(e){let A=e;return this.exceptions.has(A)?this.exceptions.get(A):zt.for(A[1]).exceptions.get(A)}getBaseException(){for(let e of this.exceptions.keys())if(Array.isArray(e)){let[,A,i]=e,r=A+"#"+i;if(r.startsWith("smithy.ts.sdk.synthetic.")&&r.endsWith("ServiceException"))return e}}find(e){for(let A of this.schemas.values())if(e(A))return A}clear(){this.schemas.clear(),this.exceptions.clear()}normalizeShapeId(e){return e.includes("#")?e:this.namespace+"#"+e}};u(zt,"registries",new Map);Qt=zt});var $e=w(()=>{Sf();Ff();Cc();kf()});var Mf,pc,Hf,qA,Ii,Gf,mc=w(()=>{Mf="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",pc=Object.entries(Mf).reduce((t,[e,A])=>(t[A]=Number(e),t),{}),Hf=Mf.split(""),qA=6,Ii=8,Gf=63});var lA,Of=w(()=>{mc();lA=t=>{let e=t.length/4*3;t.slice(-2)==="=="?e-=2:t.slice(-1)==="="&&e--;let A=new ArrayBuffer(e),i=new DataView(A);for(let r=0;r<t.length;r+=4){let o=0,n=0;for(let B=r,C=r+3;B<=C;B++)if(t[B]!=="="){if(!(t[B]in pc))throw new TypeError(`Invalid character ${t[B]} in base64 string.`);o|=pc[t[B]]<<(C-B)*qA,n+=qA}else o>>=qA;let a=r/4*3;o>>=n%Ii;let c=Math.floor(n/Ii);for(let B=0;B<c;B++){let C=(c-B-1)*Ii;i.setUint8(a+B,(o&255<<C)>>C)}}return new Uint8Array(A)}});var at,Yn=w(()=>{at=t=>new TextEncoder().encode(t)});function lt(t){let e;typeof t=="string"?e=at(t):e=t;let A=typeof e=="object"&&typeof e.length=="number",i=typeof e=="object"&&typeof e.byteOffset=="number"&&typeof e.byteLength=="number";if(!A&&!i)throw new Error("@smithy/util-base64: toBase64 encoder function only accepts string | Uint8Array.");let r="";for(let o=0;o<e.length;o+=3){let n=0,a=0;for(let B=o,C=Math.min(o+3,e.length);B<C;B++)n|=e[B]<<(C-B-1)*Ii,a+=Ii;let c=Math.ceil(a/qA);n<<=c*qA-a;for(let B=1;B<=c;B++){let C=(c-B)*qA;r+=Hf[(n&Gf<<C)>>C]}r+="==".slice(0,4-c)}return r}var zn=w(()=>{Yn();mc()});function vf(t,e,A,i){return class Vn extends Uint8Array{static fromString(o,n="utf-8"){if(typeof o=="string")return n==="base64"?Vn.mutate(i(o)):Vn.mutate(e(o));throw new Error(`Unsupported conversion from ${typeof o} to Uint8ArrayBlobAdapter.`)}static mutate(o){return Object.setPrototypeOf(o,Vn.prototype),o}transformToString(o="utf-8"){return o==="base64"?A(this):t(this)}}}var qf=w(()=>{});var ft,yc=w(()=>{ft=t=>{if(typeof t=="string")return t;if(typeof t!="object"||typeof t.byteOffset!="number"||typeof t.byteLength!="number")throw new Error("@smithy/util-utf8: toUtf8 encoder function only accepts string | Uint8Array.");return new TextDecoder("utf-8").decode(t)}});function _f(t){return typeof crypto<"u"&&typeof crypto.randomUUID=="function"?()=>crypto.randomUUID():()=>{let e=new Uint8Array(16);return t(e),e[6]=e[6]&15|64,e[8]=e[8]&63|128,et[e[0]]+et[e[1]]+et[e[2]]+et[e[3]]+"-"+et[e[4]]+et[e[5]]+"-"+et[e[6]]+et[e[7]]+"-"+et[e[8]]+et[e[9]]+"-"+et[e[10]]+et[e[11]]+et[e[12]]+et[e[13]]+et[e[14]]+et[e[15]]}}var et,Tf=w(()=>{et=Array.from({length:256},(t,e)=>e.toString(16).padStart(2,"0"))});var JS,KS,Pf,YS,Lf,Jf,Kf,zS,Yf,VS,wc,Xn,zf,XS,WS,Vf=w(()=>{JS=t=>{if(t!=null){if(typeof t=="string"){let e=parseFloat(t);if(!Number.isNaN(e))return String(e)!==String(t)&&WS.warn(XS(`Expected number but observed string: ${t}`)),e}if(typeof t=="number")return t;throw new TypeError(`Expected number, got ${typeof t}: ${t}`)}},KS=Math.ceil(2**127*(2-2**-23)),Pf=t=>{let e=JS(t);if(e!==void 0&&!Number.isNaN(e)&&e!==1/0&&e!==-1/0&&Math.abs(e)>KS)throw new TypeError(`Expected 32-bit float, got ${t}`);return e},YS=t=>{if(t!=null){if(Number.isInteger(t)&&!Number.isNaN(t))return t;throw new TypeError(`Expected integer, got ${typeof t}: ${t}`)}},Lf=t=>Kf(t,16),Jf=t=>Kf(t,8),Kf=(t,e)=>{let A=YS(t);if(A!==void 0&&zS(A,e)!==A)throw new TypeError(`Expected ${e}-bit integer, got ${t}`);return A},zS=(t,e)=>{switch(e){case 32:return Int32Array.of(t)[0];case 16:return Int16Array.of(t)[0];case 8:return Int8Array.of(t)[0]}},Yf=t=>Pf(typeof t=="string"?wc(t):t),VS=/(-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?)|(-?Infinity)|(NaN)/g,wc=t=>{let e=t.match(VS);if(e===null||e[0].length!==t.length)throw new TypeError("Expected real number, got implicit NaN");return parseFloat(t)},Xn=t=>Lf(typeof t=="string"?wc(t):t),zf=t=>Jf(typeof t=="string"?wc(t):t),XS=t=>String(new TypeError(t).stack||t).split(`
 `).slice(0,5).filter(e=>!e.includes("stackTraceWarning")).join(`
@@ -225,8 +192,10 @@ hash-wasm/dist/index.esm.js:
    *)
 */
 
+
 </script>
 <script>
+
 // The AWS SDK and MD5 library are bundled into this file (see the first script tag), so nothing loads from a CDN.
 const { S3Client, ListObjectsV2Command, PutObjectCommand, Upload, createMD5 } = window.AWSLibs || {};
 
@@ -251,7 +220,7 @@ const activeUploads = new Set();
 
 /* ---------- Helpers ---------- */
 const fmtBytes = (n) => {
-  if (!isFinite(n) || n <= 0) return "0 B";
+  if (!isFinite(n) || n < 1) return "0 B";
   const u = ["B", "KB", "MB", "GB", "TB"]; const i = Math.min(Math.floor(Math.log(n) / Math.log(1024)), 4);
   return (n / Math.pow(1024, i)).toFixed(i ? 1 : 0) + " " + u[i];
 };
@@ -278,14 +247,13 @@ function explain(e) {
 }
 
 /* ---------- Log ---------- */
-function log(level, msg) {
-  const entry = { time: new Date().toISOString(), level, msg };
+function log(level, msg, detail = false) {
+  const entry = { time: new Date().toISOString(), level, msg, detail };
   logs.push(entry);
   appendLogLine(entry);
 }
 function appendLogLine(entry) {
-  const mode = $("logLevel").value;
-  if (mode === "problems" && entry.level !== "warn" && entry.level !== "error") return;
+  if (entry.detail) return;
   const box = $("log");
   const atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 40;
   const row = document.createElement("div");
@@ -295,8 +263,6 @@ function appendLogLine(entry) {
   row.append(t, m); box.append(row);
   if (atBottom) box.scrollTop = box.scrollHeight;
 }
-function redrawLog() { $("log").replaceChildren(); logs.forEach(appendLogLine); }
-$("logLevel").addEventListener("change", redrawLog);
 
 function download(name, text, type) {
   const a = document.createElement("a");
@@ -419,29 +385,30 @@ if (!window.showDirectoryPicker) { $("compat").hidden = false; $("pickFolder").d
 $("pickFolder").onclick = async () => {
   try { state.root = await window.showDirectoryPicker({ mode: "read" }); }
   catch (e) { if (e.name === "AbortError") return; log("error", explain(e)); return; }
-  $("folderName").textContent = state.root.name;
+  $("folderName").textContent = state.root.name; $("folderName").classList.remove("muted");
   const dates = [];
   for await (const [name, h] of state.root.entries()) {
     if (h.kind === "directory" && /^\d{8}$/.test(name)) dates.push({ name, handle: h });
   }
-  if (!dates.length && /^\d{8}$/.test(state.root.name)) dates.push({ name: state.root.name, handle: state.root });
+  if (!dates.length && /^\d{8}$/.test(state.root.name)) dates.push({ name: state.root.name, handle: state.root, self: true });
   dates.sort((a, b) => b.name.localeCompare(a.name));
   state.dates = dates;
   const sel = $("dateSelect");
   sel.replaceChildren();
+  $("dateField").hidden = !dates.length;
   if (!dates.length) {
     sel.append(new Option("No dated folders found", "")); sel.disabled = true;
-    $("scanInfo").textContent = "That folder has no subfolders named like 20261005. Choose a different folder.";
+    $("scanInfo").textContent = "No subfolders named like 20261006 in that folder. Choose a different one.";
     $("start").disabled = true; return;
   }
   dates.forEach((d) => sel.append(new Option(prettyDate(d.name), d.name)));
   const t = today();
   sel.value = dates.some((d) => d.name === t) ? t : dates[0].name;
   sel.disabled = false;
-  if (sel.value !== t) $("scanInfo").textContent = `No folder for today (${t}) was found, so the most recent date is selected.`;
+  state.note = sel.value !== t ? "No folder for today, so the latest date is selected." : "";
   scanSelected();
 };
-$("dateSelect").onchange = scanSelected;
+$("dateSelect").onchange = () => { state.note = ""; scanSelected(); };
 
 async function walk(dir, prefix, out) {
   for await (const [name, h] of dir.entries()) {
@@ -458,7 +425,6 @@ async function walk(dir, prefix, out) {
 async function scanSelected() {
   const token = ++state.scanToken;
   const date = $("dateSelect").value;
-  $("dest").textContent = `s3://${CFG.bucket}/${CFG.prefix}/${date}/`;
   $("start").disabled = true;
   $("scanInfo").textContent = "Counting files...";
   const d = state.dates.find((x) => x.name === date);
@@ -467,7 +433,9 @@ async function scanSelected() {
   if (token !== state.scanToken) return;
   state.date = date; state.files = out;
   const total = out.reduce((a, f) => a + f.size, 0);
-  $("scanInfo").textContent = out.length ? `${out.length} files, ${fmtBytes(total)} in this folder.` : "This folder has no files to upload.";
+  $("scanInfo").textContent = out.length
+    ? `${out.length} files, ${fmtBytes(total)}. Uploads to ${CFG.prefix}/${date}/.${state.note ? " " + state.note : ""}`
+    : "This folder has no files to upload.";
   $("start").disabled = !out.length || state.running;
 }
 
@@ -519,7 +487,7 @@ async function buildManifests(items, base) {
     }
     const body = new Blob([lines.join("\n") + "\n"], { type: "text/csv" });
     manifests.push({ key: `${base}${sub}/md5_values.csv`, rel: `${sub}/md5_values.csv`, size: body.size, body, type: "text/csv", status: "queued", loaded: 0, kind: "manifest" });
-    log("info", `Created md5_values.csv for ${sub} (${list.length} .mov files)`);
+    log("info", `Created md5_values.csv for ${sub} (${list.length} .mov files)`, true);
   }
   return manifests;
 }
@@ -538,7 +506,7 @@ async function uploadItem(it) {
     try {
       await up.done();
       it.loaded = it.size; it.status = "done"; delete it.error;
-      log("ok", `Uploaded ${it.rel} (${fmtBytes(it.size)})`);
+      log("ok", `Uploaded ${it.rel} (${fmtBytes(it.size)})`, true);
       return;
     } catch (e) {
       if (ac.signal.aborted) { it.status = "cancelled"; return; }
@@ -557,47 +525,46 @@ function scheduleRender() { if (!renderQueued) { renderQueued = true; requestAni
 
 const statusLabel = (i) => ({
   queued: "Waiting", hashing: "Checking", uploading: `Uploading ${i.size ? Math.floor((i.loaded / i.size) * 100) : 0}%`,
-  done: "Uploaded", skipped: "Skipped (already in S3)", failed: "Failed", cancelled: "Cancelled"
+  done: "Uploaded", skipped: "Already in S3", failed: "Failed", cancelled: "Cancelled"
 }[i.status]);
+
+function renderRows() {
+  const rank = (i) => (i.status === "uploading" || i.status === "hashing" ? 0 : i.status === "failed" ? 1 : i.status === "queued" ? 2 : 3);
+  const list = state.items.slice().sort((x, y) => rank(x) - rank(y));
+  const shown = list.slice(0, 200);
+  $("rows").replaceChildren(...shown.map((i) => {
+    const tr = document.createElement("tr");
+    const a = document.createElement("td"); a.className = "name"; a.textContent = i.rel;
+    if (i.error) { const e = document.createElement("div"); e.className = "small muted"; e.textContent = i.error; a.append(e); }
+    const b = document.createElement("td"); b.className = "num"; b.textContent = fmtBytes(i.size);
+    const s = document.createElement("td"); s.className = "st st-" + i.status; s.textContent = statusLabel(i);
+    tr.append(a, b, s); return tr;
+  }));
+  $("rowsNote").textContent = list.length > 200 ? `Showing 200 of ${list.length}. The downloaded report lists every file.` : "";
+}
+$("filesBox").addEventListener("toggle", renderRows);
 
 let speed = 0, lastBytes = 0, lastT = 0, startedAt = 0;
 function render() {
   const items = state.items;
   const c = (s) => items.filter((i) => i.status === s).length;
+  const done = c("done"), skipped = c("skipped"), failed = c("failed");
   const sendable = items.filter((i) => i.status !== "skipped");
   const totalBytes = sendable.reduce((a, i) => a + i.size, 0);
   const sent = sendable.reduce((a, i) => a + (i.status === "done" ? i.size : i.loaded || 0), 0);
   $("bar").style.width = (totalBytes ? (sent / totalBytes) * 100 : 0) + "%";
-  $("sUp").textContent = c("done"); $("sSkip").textContent = c("skipped"); $("sFail").textContent = c("failed");
-  $("sData").textContent = fmtBytes(sent);
   const now = Date.now();
   if (now - lastT > 1000) { const inst = ((sent - lastBytes) / (now - lastT)) * 1000; speed = speed ? speed * 0.7 + inst * 0.3 : inst; lastBytes = sent; lastT = now; }
-  $("sSpeed").textContent = state.running && speed > 0 ? fmtBytes(speed) + "/s" : "-";
-  $("sEta").textContent = state.running && speed > 0 ? fmtDur((totalBytes - sent) / speed) : "-";
-
-  const f = state.filter;
-  const list = f === "failed" ? items.filter((i) => i.status === "failed")
-    : f === "active" ? items.filter((i) => i.status === "uploading" || i.status === "hashing") : items;
-  const shown = list.slice(0, 200);
-  $("rows").replaceChildren(...shown.map((i) => {
-    const tr = document.createElement("tr");
-    const a = document.createElement("td"); a.className = "name"; a.textContent = i.rel;
-    if (i.error) { const e = document.createElement("div"); e.className = "small st-failed"; e.textContent = i.error; a.append(e); }
-    const b = document.createElement("td"); b.className = "num"; b.textContent = fmtBytes(i.size);
-    const s = document.createElement("td"); s.className = "st-" + i.status; s.textContent = statusLabel(i);
-    if (i.status === "uploading") { const m = document.createElement("div"); m.className = "mini"; m.innerHTML = "<i></i>"; m.firstChild.style.width = (i.size ? (i.loaded / i.size) * 100 : 0) + "%"; s.append(m); }
-    tr.append(a, b, s); return tr;
-  }));
-  $("rowsNote").textContent = list.length > 200 ? `Showing the first 200 of ${list.length}. Use Download file report for the full list.` : (list.length ? "" : (f === "all" ? "" : "Nothing here."));
-  const t = document.querySelectorAll("#tabs button");
-  t[0].textContent = `In progress (${c("uploading") + c("hashing")})`; t[1].textContent = `Failed (${c("failed")})`; t[2].textContent = `All (${items.length})`;
+  const parts = [`${done + skipped} of ${items.length} files`];
+  if (skipped) parts.push(`${skipped} already in S3`);
+  parts.push(`${fmtBytes(sent)} sent`);
+  if (state.running && speed > 0) parts.push(`${fmtBytes(speed)}/s`, `about ${fmtDur((totalBytes - sent) / speed)} left`);
+  const line = $("statline");
+  line.textContent = parts.join(", ");
+  if (failed) { const f = document.createElement("span"); f.className = "failed"; f.textContent = `${failed} failed`; line.append(", ", f); }
+  $("fileCount").textContent = `(${items.length})`;
+  if ($("filesBox").open) renderRows();
 }
-$("tabs").addEventListener("click", (e) => {
-  const b = e.target.closest("button"); if (!b) return;
-  state.filter = b.dataset.f;
-  document.querySelectorAll("#tabs button").forEach((x) => x.setAttribute("aria-pressed", x === b));
-  render();
-});
 
 window.addEventListener("beforeunload", (e) => { if (state.running) { e.preventDefault(); e.returnValue = ""; } });
 
@@ -609,7 +576,7 @@ $("cancel").onclick = () => {
 $("start").onclick = async () => {
   if (state.running) return;
   state.running = true; ac = new AbortController(); logs.length = 0; $("log").replaceChildren();
-  $("runView").hidden = false; $("start").disabled = true; $("cancel").hidden = false;
+  $("runView").hidden = false; $("filesBox").open = false; $("start").hidden = true; $("cancel").hidden = false;
   $("pickFolder").disabled = true; $("dateSelect").disabled = true;
   speed = 0; lastBytes = 0; lastT = Date.now(); startedAt = Date.now();
   let wake = null; try { wake = await navigator.wakeLock?.request("screen"); } catch {}
@@ -622,9 +589,10 @@ $("start").onclick = async () => {
     .map((f) => ({ key: base + f.rel, rel: f.rel, size: f.size, body: f.file, file: f.file, type: mkType(f.file), status: "queued", loaded: 0, kind: "file" }));
   render();
   log("info", `Started by ${state.user}`);
-  log("info", `Source: ${state.root.name}/${date}  Destination: s3://${CFG.bucket}/${base}`);
+  log("info", `Source: ${state.dates.find((x) => x.name === date)?.self ? state.root.name : state.root.name + "/" + date}  Destination: s3://${CFG.bucket}/${base}`);
   log("info", `${state.items.length} files, ${fmtBytes(state.items.reduce((a, i) => a + i.size, 0))}`);
 
+  let fatal = false;
   try {
     setPhase("Checking what is already in S3");
     const remote = await listRemote(base);
@@ -644,16 +612,17 @@ $("start").onclick = async () => {
     const worker = async () => { while (!ac.signal.aborted) { const it = queue[idx++]; if (!it) return; await uploadItem(it); } };
     await Promise.all(Array.from({ length: CFG.fileConcurrency }, worker));
   } catch (e) {
-    if (!ac.signal.aborted) log("error", explain(e));
+    if (!ac.signal.aborted) { fatal = true; log("error", explain(e)); }
   }
 
   const c = (s) => state.items.filter((i) => i.status === s).length;
   const cancelled = ac.signal.aborted;
   const summary = { user: state.user, date, bucket: CFG.bucket, prefix: base, uploaded: c("done"), skipped: c("skipped"), failed: c("failed"), notStarted: c("queued") + c("cancelled"), cancelled, seconds: Math.round((Date.now() - startedAt) / 1000) };
-  setPhase(cancelled ? "Cancelled" : summary.failed ? `Finished with ${summary.failed} failed` : "Upload complete");
-  log(cancelled || summary.failed ? "warn" : "ok",
-    `${cancelled ? "Cancelled" : "Finished"}: ${summary.uploaded} uploaded, ${summary.skipped} skipped, ${summary.failed} failed, in ${fmtDur(summary.seconds)}`);
-  if (summary.failed || cancelled) log("info", "Press Start upload again to retry. Files already in S3 are skipped.");
+  summary.stoppedByError = fatal;
+  setPhase(cancelled ? "Cancelled" : fatal ? "Stopped by an error" : summary.failed ? `Finished with ${summary.failed} failed` : "Upload complete");
+  log(fatal ? "error" : cancelled || summary.failed ? "warn" : "ok",
+    `${cancelled ? "Cancelled" : fatal ? "Stopped by an error" : "Finished"}: ${summary.uploaded} uploaded, ${summary.skipped} skipped, ${summary.failed} failed, ${summary.notStarted} not started, in ${fmtDur(summary.seconds)}`);
+  if (summary.failed || cancelled || fatal) log("info", "Press Start upload again to retry. Files already in S3 are skipped.");
 
   if (CFG.saveRunLogToS3) {
     try {
@@ -665,7 +634,8 @@ $("start").onclick = async () => {
   }
 
   try { await wake?.release(); } catch {}
-  state.running = false; $("cancel").hidden = true; $("start").disabled = false; $("start").textContent = "Start upload again";
+  state.running = false; $("cancel").hidden = true; $("start").hidden = false; $("start").disabled = false; $("start").textContent = "Upload again";
+  if (summary.failed) $("filesBox").open = true;
   $("pickFolder").disabled = false; $("dateSelect").disabled = false;
   render();
 };
@@ -678,7 +648,6 @@ window.addEventListener("error", (e) => {
 });
 (async function boot() {
   if (!window.AWSLibs) { showAuth("The page's upload libraries did not load. Reload the page."); $("signInForm").hidden = true; return; }
-  $("dest").textContent = `s3://${CFG.bucket}/${CFG.prefix}/`;
   if ([CFG.userPoolId, CFG.clientId, CFG.identityPoolId].some((v) => v.startsWith("REPLACE"))) {
     showAuth("This page is not configured yet. Fill in the Cognito IDs in the CFG block at the top of the script."); $("signInForm").hidden = true; return;
   }
@@ -691,6 +660,7 @@ window.addEventListener("error", (e) => {
   }
   showAuth();
 })();
+
 </script>
 </body>
 </html>
