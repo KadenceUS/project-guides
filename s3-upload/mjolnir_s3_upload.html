@@ -222,6 +222,7 @@ function updateButtons() {
     else primary = state.lastRun === "ok" ? null : "start";
   }
   ["pickFolder", "start", "cancel"].forEach((id) => $(id).classList.toggle("primary", id === primary));
+  $("start").textContent = state.lastRun ? "Upload again" : "Start upload";
 }
 let s3 = null, ac = null, tokens = null, pendingChallenge = null;
 const logs = [];
@@ -644,7 +645,7 @@ $("start").onclick = async () => {
   }
 
   try { await wake?.release(); } catch {}
-  state.running = false; $("cancel").hidden = true; $("start").hidden = false; $("start").disabled = false; $("start").textContent = "Upload again";
+  state.running = false; $("cancel").hidden = true; $("start").hidden = false; $("start").disabled = false;
   if (summary.failed) $("filesBox").open = true;
   state.lastRun = summary.failed || cancelled || fatal ? "attention" : "ok"; updateButtons();
   $("pickFolder").disabled = false; $("dateSelect").disabled = false;
