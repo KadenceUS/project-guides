@@ -45,6 +45,9 @@ button.link { border: 0; padding: 0; background: none; color: #fff; font-weight:
 button.link:hover:not(:disabled) { color: var(--kadence-tangerine); background: none; filter: none; }
 :focus-visible { outline: 2px solid var(--kadence-tangerine); outline-offset: 2px; }
 #scanInfo { margin: -14px 0 26px; }
+#scanWarn { margin-top: -8px; }
+.msg .sub { margin-top: 6px; }
+.msg ul { margin: 6px 0 0; padding-left: 18px; }
 .msg { padding: 12px 14px; margin-bottom: 24px; font-size: 14px; color: var(--panel-text); border-left: 3px solid var(--kadence-watermelon-red); background: var(--kadence-watermelon-red-12); border-radius: 0 6px 6px 0; }
 .msg.warn { border-left-color: var(--kadence-light-orange); background: var(--kadence-light-orange-12); }
 
@@ -129,6 +132,7 @@ footer button.link { font-size: 12px; margin-left: 6px; }
         <select id="dateSelect" disabled></select>
       </div>
       <p id="scanInfo" class="muted small"></p>
+      <div id="scanWarn" class="msg warn" hidden></div>
 
       <button id="start" disabled>Start upload</button>
     </div>
@@ -226,7 +230,7 @@ hash-wasm/dist/index.esm.js:
 <script>
 
 // The AWS SDK and MD5 library are bundled into this file (see the first script tag), so nothing loads from a CDN.
-const { S3Client, ListObjectsV2Command, PutObjectCommand, Upload, createMD5 } = window.AWSLibs || {};
+const { S3Client, ListObjectsV2Command, Upload, createMD5 } = window.AWSLibs || {};
 
 /* ---------- Configuration: fill in after the AWS setup ---------- */
 const CFG = {
@@ -236,7 +240,6 @@ const CFG = {
   userPoolId: "us-west-2_d4gjWFn5M",       // e.g. us-west-2_AbCdEfGhI
   clientId: "2vomjjftcs6aqt1lc7staec805",         // user pool app client id (no secret)
   identityPoolId: "us-west-2:12a63cea-de45-4ef1-a1db-d866f139d919",   // e.g. us-west-2:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-  saveRunLogToS3: true,           // writes a JSON run log to <prefix>/_upload-logs/
   fileConcurrency: 3,
   partSizeMB: 16
 };
@@ -377,7 +380,12 @@ async function getCredentials() {
 }
 function buildClient() {
   identityId = null; creds = null;
-  s3 = new S3Client({ region: CFG.region, credentials: getCredentials });
+  // Calculate checksums only when S3 requires them. The SDK default (CRC32 on every request) makes multipart
+  // uploads fail at completion with "checksum for each part ... missing for part 1".
+  s3 = new S3Client({
+    region: CFG.region, credentials: getCredentials,
+    requestChecksumCalculation: "WHEN_REQUIRED", responseChecksumValidation: "WHEN_REQUIRED"
+  });
 }
 function showApp(email) {
   state.user = email; updateButtons();
@@ -443,7 +451,7 @@ $("pickFolder").onclick = async () => {
   state.dates = dates;
   const sel = $("dateSelect");
   sel.replaceChildren();
-  $("dateField").hidden = !dates.length;
+  $("dateField").hidden = !dates.length; showScanWarn(null);
   if (!dates.length) {
     sel.append(new Option("No dated folders found", "")); sel.disabled = true;
     $("scanInfo").textContent = "No subfolders named like 20261006 in that folder. Choose a different one.";
@@ -470,26 +478,72 @@ async function walk(dir, prefix, out) {
     }
   }
 }
+const PID_RE = /^P\d{4}\//;   // file path that starts inside a valid PID folder
+const PID_DIR_RE = /^P\d{4}$/; // valid PID folder name: P plus 4 digits
+
+function showScanWarn(title, { hint, dirsLabel, dirs = [], loose = 0 } = {}) {
+  const box = $("scanWarn");
+  box.replaceChildren();
+  box.hidden = !title;
+  if (!title) return;
+  const line = (tag, text, cls) => { const e = document.createElement(tag); if (cls) e.className = cls; e.textContent = text; box.append(e); return e; };
+  line("strong", title);
+  if (hint) line("div", hint, "sub");
+  if (dirs.length) {
+    line("div", dirsLabel, "sub");
+    const ul = document.createElement("ul");
+    dirs.slice(0, 10).forEach((t) => { const li = document.createElement("li"); li.textContent = t; ul.append(li); });
+    if (dirs.length > 10) { const li = document.createElement("li"); li.textContent = `and ${dirs.length - 10} more`; ul.append(li); }
+    box.append(ul);
+  }
+  if (loose) line("div", `${plural(loose, "file")} directly in the date folder will not be uploaded.`, "sub");
+}
+
 async function scanSelected() {
   const token = ++state.scanToken;
   const date = $("dateSelect").value;
   $("start").disabled = true; state.scanning = true; updateButtons();
+  showScanWarn(null);
   $("scanInfo").textContent = "Counting files...";
   const d = state.dates.find((x) => x.name === date);
-  const out = [];
-  try { await walk(d.handle, "", out); } catch (e) { $("scanInfo").textContent = explain(e); state.scanning = false; updateButtons(); return; }
+  const out = [], badDirs = [];
+  try {
+    await walk(d.handle, "", out);
+    // Folders sitting directly in the date folder whose names are not a valid PID
+    for await (const [name, h] of d.handle.entries()) {
+      if (h.kind === "directory" && name !== ".thumbnails" && !PID_DIR_RE.test(name)) badDirs.push(name);
+    }
+  } catch (e) { $("scanInfo").textContent = explain(e); state.scanning = false; updateButtons(); return; }
   if (token !== state.scanToken) return;
-  state.date = date; state.files = out;
-  const total = out.reduce((a, f) => a + f.size, 0);
-  $("scanInfo").textContent = out.length
-    ? `${plural(out.length, "file")}, ${fmtBytes(total)}. Uploads to ${CFG.prefix}/${date}/.${state.note ? " " + state.note : ""}`
-    : "This folder has no files to upload.";
-  $("start").disabled = !out.length || state.running;
+
+  // Only files inside a valid PID folder (at any depth inside it) are uploaded.
+  const files = out.filter((f) => PID_RE.test(f.rel));
+  const loose = out.filter((f) => !f.rel.includes("/")).length;
+  const perTop = new Map();
+  out.forEach((f) => { const i = f.rel.indexOf("/"); if (i > 0) { const k = f.rel.slice(0, i); perTop.set(k, (perTop.get(k) || 0) + 1); } });
+  const invalid = badDirs.sort().map((n) => `${n} (${plural(perTop.get(n) || 0, "file")})`);
+
+  state.date = date; state.files = files;
+  const total = files.reduce((a, f) => a + f.size, 0);
+  const issues = invalid.length || loose;
+  const hint = invalid.length ? "A valid PID folder is named P followed by 4 digits, like P0025." : "";
+  if (files.length) {
+    $("scanInfo").textContent = `${plural(files.length, "file")}, ${fmtBytes(total)}. Uploads to ${CFG.prefix}/${date}/.${state.note ? " " + state.note : ""}`;
+    if (issues) showScanWarn("Some items in this date folder will not be uploaded.", { hint, dirsLabel: "Not a valid PID folder:", dirs: invalid, loose });
+  } else if (issues) {
+    $("scanInfo").textContent = "";
+    showScanWarn("No valid PID folders with files found. Nothing will be uploaded.",
+      { hint: hint || "A valid PID folder is named P followed by 4 digits, like P0025.", dirsLabel: "Not a valid PID folder:", dirs: invalid, loose });
+  } else {
+    $("scanInfo").textContent = "This folder has no files to upload.";
+  }
+  $("start").disabled = !files.length || state.running;
   state.scanning = false; updateButtons();
 }
 
 /* ---------- Run ---------- */
-const isMov = (rel) => /\.mov$/i.test(rel) && rel.split("/").length === 2;
+// A .mov counts if it sits anywhere inside a PID folder (the first path segment), at any depth.
+const isMov = (rel) => /\.mov$/i.test(rel) && rel.split("/").length >= 2;
 
 function setPhase(t) { $("phase").textContent = t; }
 
@@ -522,18 +576,25 @@ async function buildManifests(items, base) {
     (bySub.get(sub) || bySub.set(sub, []).get(sub)).push(i);
   });
   const manifests = [];
+  const total = [...bySub.values()].reduce((a, l) => a + l.length, 0);
   let n = 0;
   for (const [sub, list] of bySub) {
-    const lines = ["filename,md5"];
+    // One md5_values.csv per PID folder, covering every .mov at any depth inside it.
+    // "filename" is the bare file name only (P0025/VideoOutput/a.mov is listed as a.mov).
+    const rows = [];
     for (const it of list) {
       n++;
-      setPhase(`Checking .mov files (${n} of ${[...bySub.values()].flat().length})`);
+      setPhase(`Checking .mov files (${n} of ${total})`);
       const prev = it.status;
       it.status = "hashing"; scheduleRender();
       const sum = await md5File(it.file);
-      lines.push(`"${it.rel.split("/")[1]}","${sum}"`);
+      rows.push([it.rel.split("/").pop(), sum]);
       it.status = prev;
     }
+    rows.sort((a, b) => a[0].localeCompare(b[0]));
+    const dupes = [...new Set(rows.filter((r, i) => i && r[0] === rows[i - 1][0]).map((r) => r[0]))];
+    if (dupes.length) log("warn", `${sub}: duplicate file names in nested folders, so md5_values.csv lists them more than once: ${dupes.slice(0, 5).join(", ")}${dupes.length > 5 ? ", ..." : ""}`);
+    const lines = ["filename,md5", ...rows.map((r) => r.map(csvCell).join(","))];
     const body = new Blob([lines.join("\n") + "\n"], { type: "text/csv" });
     manifests.push({ key: `${base}${sub}/md5_values.csv`, rel: `${sub}/md5_values.csv`, size: body.size, body, type: "text/csv", status: "queued", loaded: 0, kind: "manifest" });
     log("info", `Created md5_values.csv for ${sub} (${plural(list.length, ".mov file")})`, true);
@@ -680,15 +741,6 @@ $("start").onclick = async () => {
   log(fatal ? "error" : cancelled || summary.failed ? "warn" : "ok",
     `${cancelled ? "Cancelled" : fatal ? "Stopped by an error" : "Finished"}: ${summary.uploaded} uploaded, ${summary.skipped} skipped, ${summary.failed} failed, ${summary.notStarted} not started, in ${fmtDur(summary.seconds)}`);
   if (summary.failed || cancelled || fatal) log("info", "Press Start upload again to retry. Files already in S3 are skipped.");
-
-  if (CFG.saveRunLogToS3) {
-    try {
-      const key = `${CFG.prefix}/_upload-logs/${date}_${new Date().toISOString().replace(/[:.]/g, "-")}_${(state.user || "user").replace(/[^a-z0-9@.-]/gi, "_")}.json`;
-      await s3.send(new PutObjectCommand({ Bucket: CFG.bucket, Key: key, ContentType: "application/json",
-        Body: JSON.stringify({ summary, files: state.items.map(({ key, size, status, error }) => ({ key, size, status, error })), log: logs }, null, 2) }));
-      log("info", `Run log saved to s3://${CFG.bucket}/${key}`);
-    } catch (e) { log("warn", "Could not save the run log to S3: " + explain(e)); }
-  }
 
   try { await wake?.release(); } catch {}
   state.running = false; $("cancel").hidden = true; $("start").disabled = false;
