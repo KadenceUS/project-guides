@@ -45,6 +45,11 @@ button.link { border: 0; padding: 0; background: none; color: #fff; font-weight:
 button.link:hover:not(:disabled) { color: var(--kadence-tangerine); background: none; filter: none; }
 :focus-visible { outline: 2px solid var(--kadence-tangerine); outline-offset: 2px; }
 #scanInfo { margin: -14px 0 26px; }
+.datelist { display: flex; flex-direction: column; gap: 8px; max-width: 340px; max-height: 190px; overflow-y: auto; padding: 10px 12px; border: 1px solid var(--field-line); border-radius: 6px; background: rgba(255, 255, 255, .08); }
+.datelist label { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 14px; font-weight: 400; color: #fff; cursor: pointer; }
+.datelist input { width: auto; max-width: none; padding: 0; margin: 0; }
+.datelinks { margin-top: 8px; }
+.datelinks button.link { margin-right: 12px; }
 #scanWarn { margin-top: -8px; }
 .msg .sub { margin-top: 6px; }
 .msg ul { margin: 6px 0 0; padding-left: 18px; }
@@ -128,8 +133,9 @@ footer button.link { font-size: 12px; margin-left: 6px; }
         <div class="row"><button id="pickFolder">Choose folder</button><span id="folderName" class="muted">The folder that holds the dated subfolders</span></div>
       </div>
       <div class="field" id="dateField" hidden>
-        <label for="dateSelect">Date</label>
-        <select id="dateSelect" disabled></select>
+        <label>Date folders</label>
+        <div id="dateList" class="datelist"></div>
+        <div class="small datelinks"><button type="button" class="link" id="dateAll">Select all</button> <button type="button" class="link" id="dateNone">Clear</button></div>
       </div>
       <p id="scanInfo" class="muted small"></p>
       <div id="scanWarn" class="msg warn" hidden></div>
@@ -449,22 +455,32 @@ $("pickFolder").onclick = async () => {
   if (!dates.length && /^\d{8}$/.test(state.root.name)) dates.push({ name: state.root.name, handle: state.root, self: true });
   dates.sort((a, b) => b.name.localeCompare(a.name));
   state.dates = dates;
-  const sel = $("dateSelect");
-  sel.replaceChildren();
+  const list = $("dateList");
+  list.replaceChildren();
   $("dateField").hidden = !dates.length; showScanWarn(null);
   if (!dates.length) {
-    sel.append(new Option("No dated folders found", "")); sel.disabled = true;
     $("scanInfo").textContent = "No subfolders named like 20261006 in that folder. Choose a different one.";
     $("start").disabled = true; updateButtons(); return;
   }
-  dates.forEach((d) => sel.append(new Option(prettyDate(d.name), d.name)));
   const t = today();
-  sel.value = dates.some((d) => d.name === t) ? t : dates[0].name;
-  sel.disabled = false;
-  state.note = sel.value !== t ? "No folder for today, so the latest date is selected." : "";
+  const defaultDate = dates.some((d) => d.name === t) ? t : dates[0].name;
+  dates.forEach((d) => {
+    const label = document.createElement("label");
+    const cb = document.createElement("input"); cb.type = "checkbox"; cb.value = d.name; cb.checked = d.name === defaultDate;
+    label.append(cb, document.createTextNode(prettyDate(d.name)));
+    list.append(label);
+  });
+  state.note = defaultDate !== t ? "No folder for today, so the latest date is selected." : "";
   scanSelected();
 };
-$("dateSelect").onchange = () => { state.note = ""; state.lastRun = null; scanSelected(); };
+const selectedDates = () => [...$("dateList").querySelectorAll("input:checked")].map((cb) => cb.value).sort();
+const setDatesDisabled = (v) => {
+  $("dateList").querySelectorAll("input").forEach((cb) => { cb.disabled = v; });
+  $("dateAll").disabled = v; $("dateNone").disabled = v;
+};
+$("dateList").addEventListener("change", () => { state.note = ""; state.lastRun = null; scanSelected(); });
+$("dateAll").onclick = () => { $("dateList").querySelectorAll("input").forEach((cb) => { cb.checked = true; }); state.note = ""; state.lastRun = null; scanSelected(); };
+$("dateNone").onclick = () => { $("dateList").querySelectorAll("input").forEach((cb) => { cb.checked = false; }); state.note = ""; state.lastRun = null; scanSelected(); };
 
 async function walk(dir, prefix, out) {
   for await (const [name, h] of dir.entries()) {
@@ -481,7 +497,7 @@ async function walk(dir, prefix, out) {
 const PID_RE = /^P\d{4}\//;   // file path that starts inside a valid PID folder
 const PID_DIR_RE = /^P\d{4}$/; // valid PID folder name: P plus 4 digits
 
-function showScanWarn(title, { hint, dirsLabel, dirs = [], loose = 0 } = {}) {
+function showScanWarn(title, { hint, dirsLabel, dirs = [], loose = 0, emptyDates = [] } = {}) {
   const box = $("scanWarn");
   box.replaceChildren();
   box.hidden = !title;
@@ -496,54 +512,73 @@ function showScanWarn(title, { hint, dirsLabel, dirs = [], loose = 0 } = {}) {
     if (dirs.length > 10) { const li = document.createElement("li"); li.textContent = `and ${dirs.length - 10} more`; ul.append(li); }
     box.append(ul);
   }
-  if (loose) line("div", `${plural(loose, "file")} directly in the date folder will not be uploaded.`, "sub");
+  if (loose) line("div", `${plural(loose, "file")} directly in a date folder will not be uploaded.`, "sub");
+  if (emptyDates.length) line("div", `No valid PID folders with files in: ${emptyDates.join(", ")}.`, "sub");
 }
 
 async function scanSelected() {
   const token = ++state.scanToken;
-  const date = $("dateSelect").value;
+  const sel = selectedDates();
   $("start").disabled = true; state.scanning = true; updateButtons();
   showScanWarn(null);
+  if (!sel.length) {
+    state.sel = []; state.files = [];
+    $("scanInfo").textContent = "Select at least one date.";
+    state.scanning = false; updateButtons(); return;
+  }
   $("scanInfo").textContent = "Counting files...";
-  const d = state.dates.find((x) => x.name === date);
-  const out = [], badDirs = [];
+  const multi = sel.length > 1;
+  const files = [], invalid = [], perDate = [];
+  let loose = 0;
   try {
-    await walk(d.handle, "", out);
-    // Folders sitting directly in the date folder whose names are not a valid PID
-    for await (const [name, h] of d.handle.entries()) {
-      if (h.kind === "directory" && name !== ".thumbnails" && !PID_DIR_RE.test(name)) badDirs.push(name);
+    for (const date of sel) {
+      const d = state.dates.find((x) => x.name === date);
+      const out = [], badDirs = [];
+      await walk(d.handle, "", out);
+      // Folders sitting directly in the date folder whose names are not a valid PID
+      for await (const [name, h] of d.handle.entries()) {
+        if (h.kind === "directory" && name !== ".thumbnails" && !PID_DIR_RE.test(name)) badDirs.push(name);
+      }
+      if (token !== state.scanToken) return;
+
+      // Only files inside a valid PID folder (at any depth inside it) are uploaded.
+      const ok = out.filter((f) => PID_RE.test(f.rel));
+      loose += out.filter((f) => !f.rel.includes("/")).length;
+      const perTop = new Map();
+      out.forEach((f) => { const i = f.rel.indexOf("/"); if (i > 0) { const k = f.rel.slice(0, i); perTop.set(k, (perTop.get(k) || 0) + 1); } });
+      badDirs.sort().forEach((n) => invalid.push(`${multi ? date + "/" : ""}${n} (${plural(perTop.get(n) || 0, "file")})`));
+      // rel is date/PID/path from here on, so the same names on different dates stay distinct
+      ok.forEach((f) => files.push({ ...f, rel: `${date}/${f.rel}` }));
+      perDate.push({ date, count: ok.length });
     }
   } catch (e) { $("scanInfo").textContent = explain(e); state.scanning = false; updateButtons(); return; }
   if (token !== state.scanToken) return;
 
-  // Only files inside a valid PID folder (at any depth inside it) are uploaded.
-  const files = out.filter((f) => PID_RE.test(f.rel));
-  const loose = out.filter((f) => !f.rel.includes("/")).length;
-  const perTop = new Map();
-  out.forEach((f) => { const i = f.rel.indexOf("/"); if (i > 0) { const k = f.rel.slice(0, i); perTop.set(k, (perTop.get(k) || 0) + 1); } });
-  const invalid = badDirs.sort().map((n) => `${n} (${plural(perTop.get(n) || 0, "file")})`);
-
-  state.date = date; state.files = files;
+  state.sel = sel; state.files = files;
+  state.date = multi ? `${sel[0]}-and-${sel.length - 1}-more` : sel[0];
   const total = files.reduce((a, f) => a + f.size, 0);
-  const issues = invalid.length || loose;
+  const emptyDates = multi ? perDate.filter((p) => !p.count).map((p) => p.date) : [];
+  const issues = invalid.length || loose || emptyDates.length;
   const hint = invalid.length ? "A valid PID folder is named P followed by 4 digits, like P0025." : "";
+  const dests = sel.slice(0, 3).map((dt) => `${CFG.prefix}/${dt}/`).join(", ") + (sel.length > 3 ? `, and ${sel.length - 3} more` : "");
   if (files.length) {
-    $("scanInfo").textContent = `${plural(files.length, "file")}, ${fmtBytes(total)}. Uploads to ${CFG.prefix}/${date}/.${state.note ? " " + state.note : ""}`;
-    if (issues) showScanWarn("Some items in this date folder will not be uploaded.", { hint, dirsLabel: "Not a valid PID folder:", dirs: invalid, loose });
+    $("scanInfo").textContent = `${plural(files.length, "file")}, ${fmtBytes(total)}${multi ? ` across ${plural(sel.length, "date")}` : ""}. Uploads to ${dests}.${state.note ? " " + state.note : ""}`;
+    if (issues) showScanWarn(multi ? "Some items in the selected date folders will not be uploaded." : "Some items in this date folder will not be uploaded.",
+      { hint, dirsLabel: "Not a valid PID folder:", dirs: invalid, loose, emptyDates });
   } else if (issues) {
     $("scanInfo").textContent = "";
     showScanWarn("No valid PID folders with files found. Nothing will be uploaded.",
       { hint: hint || "A valid PID folder is named P followed by 4 digits, like P0025.", dirsLabel: "Not a valid PID folder:", dirs: invalid, loose });
   } else {
-    $("scanInfo").textContent = "This folder has no files to upload.";
+    $("scanInfo").textContent = "The selected folder has no files to upload.";
   }
   $("start").disabled = !files.length || state.running;
   state.scanning = false; updateButtons();
 }
 
 /* ---------- Run ---------- */
-// A .mov counts if it sits anywhere inside a PID folder (the first path segment), at any depth.
-const isMov = (rel) => /\.mov$/i.test(rel) && rel.split("/").length >= 2;
+// rel is date/PID/path. A .mov counts if it sits anywhere inside a PID folder, at any depth.
+const isMov = (rel) => /\.mov$/i.test(rel) && rel.split("/").length >= 3;
 
 function setPhase(t) { $("phase").textContent = t; }
 
@@ -557,7 +592,7 @@ async function listRemote(prefix) {
   return map;
 }
 
-async function md5File(file) {
+async function md5File(file, onBytes) {
   const h = await createMD5(); h.init();
   const reader = file.stream().getReader();
   for (;;) {
@@ -565,6 +600,7 @@ async function md5File(file) {
     const { done, value } = await reader.read();
     if (done) break;
     h.update(value);
+    if (onBytes) onBytes(value.length);
   }
   return h.digest("hex");
 }
@@ -572,22 +608,31 @@ async function md5File(file) {
 async function buildManifests(items, base) {
   const bySub = new Map();
   items.filter((i) => isMov(i.rel)).forEach((i) => {
-    const sub = i.rel.split("/")[0];
+    const sub = i.rel.split("/").slice(0, 2).join("/");   // date/PID
     (bySub.get(sub) || bySub.set(sub, []).get(sub)).push(i);
   });
   const manifests = [];
-  const total = [...bySub.values()].reduce((a, l) => a + l.length, 0);
-  let n = 0;
+  const movs = [...bySub.values()].flat();
+  const total = movs.length, totalBytes = movs.reduce((a, i) => a + i.size, 0);
+  let n = 0, hashed = 0, lastShow = 0;
+  const t0 = Date.now();
+  const showHash = (force) => {
+    const now = Date.now();
+    if (!force && now - lastShow < 500) return;
+    lastShow = now;
+    const rate = hashed / Math.max((now - t0) / 1000, 0.001);
+    setPhase(`Checking .mov files (${n} of ${total}), ${fmtBytes(hashed)} of ${fmtBytes(totalBytes)}${rate > 0 && hashed > 0 ? `, ${fmtBytes(rate)}/s, about ${fmtDur((totalBytes - hashed) / rate)} left` : ""}`);
+  };
   for (const [sub, list] of bySub) {
-    // One md5_values.csv per PID folder, covering every .mov at any depth inside it.
+    // One md5_values.csv per PID folder (per date), covering every .mov at any depth inside it.
     // "filename" is the bare file name only (P0025/VideoOutput/a.mov is listed as a.mov).
     const rows = [];
     for (const it of list) {
       n++;
-      setPhase(`Checking .mov files (${n} of ${total})`);
+      showHash(true);
       const prev = it.status;
       it.status = "hashing"; scheduleRender();
-      const sum = await md5File(it.file);
+      const sum = await md5File(it.file, (b) => { hashed += b; showHash(false); });
       rows.push([it.rel.split("/").pop(), sum]);
       it.status = prev;
     }
@@ -681,40 +726,51 @@ window.addEventListener("beforeunload", (e) => { if (state.running) { e.preventD
 $("again").onclick = () => $("start").click();
 $("another").onclick = () => {
   state.view = "setup"; state.lastRun = null; $("runView").hidden = true; $("setupView").hidden = false;
-  if ($("dateSelect").value) scanSelected(); else updateButtons();
+  if (state.dates.length) scanSelected(); else updateButtons();
 };
 $("cancel").onclick = () => {
   if (!confirm("Stop the upload? Files already uploaded stay in S3. You can start again later and finished files will be skipped.")) return;
   ac.abort(); activeUploads.forEach((u) => u.abort()); log("warn", "Cancel requested.");
 };
 
+// The browser drops a screen wake lock whenever the tab is hidden, so ask for it again when the tab returns.
+let wake = null;
+async function acquireWake() {
+  try { await wake?.release(); } catch {}
+  try { wake = await navigator.wakeLock?.request("screen"); } catch { wake = null; }
+}
+document.addEventListener("visibilitychange", () => { if (state.running && document.visibilityState === "visible") acquireWake(); });
+
 $("start").onclick = async () => {
   if (state.running) return;
   state.running = true; ac = new AbortController(); logs.length = 0; $("log").replaceChildren();
   state.view = "run"; $("setupView").hidden = true; $("runView").hidden = false; $("filesBox").open = false;
   $("cancel").hidden = false; $("again").hidden = true; $("another").hidden = true;
-  $("runMeta").textContent = `${prettyDate(state.date)}: ${plural(state.files.length, "file")}, ${fmtBytes(state.files.reduce((a, f) => a + f.size, 0))} to ${CFG.prefix}/${state.date}/`;
+  const dates = state.sel.slice(), multi = dates.length > 1;
+  $("runMeta").textContent = `${multi ? plural(dates.length, "date") : prettyDate(dates[0])}: ${plural(state.files.length, "file")}, ${fmtBytes(state.files.reduce((a, f) => a + f.size, 0))} to ${multi ? `${CFG.prefix}/ (${dates.join(", ")})` : `${CFG.prefix}/${dates[0]}/`}`;
   updateButtons();
-  $("pickFolder").disabled = true; $("dateSelect").disabled = true;
+  $("pickFolder").disabled = true; setDatesDisabled(true);
   speed = 0; lastBytes = 0; lastT = Date.now(); startedAt = Date.now();
-  let wake = null; try { wake = await navigator.wakeLock?.request("screen"); } catch {}
+  await acquireWake();
 
-  const date = state.date, base = `${CFG.prefix}/${date}/`;
+  const base = `${CFG.prefix}/`;   // item keys are base + date/PID/path
   const wantManifest = true;
   const mkType = (f) => f.type || (/\.mov$/i.test(f.name) ? "video/quicktime" : "");
   state.items = state.files
-    .filter((f) => !(wantManifest && /(^|\/)md5_values\.csv$/.test(f.rel) && f.rel.split("/").length === 2))
+    .filter((f) => !(wantManifest && /(^|\/)md5_values\.csv$/.test(f.rel) && f.rel.split("/").length === 3))
     .map((f) => ({ key: base + f.rel, rel: f.rel, size: f.size, body: f.file, file: f.file, type: mkType(f.file), status: "queued", loaded: 0, kind: "file" }));
   render();
   log("info", `Started by ${state.user}`);
-  log("info", `Source: ${state.dates.find((x) => x.name === date)?.self ? state.root.name : state.root.name + "/" + date}  Destination: s3://${CFG.bucket}/${base}`);
+  const srcFor = (dt) => (state.dates.find((x) => x.name === dt)?.self ? state.root.name : `${state.root.name}/${dt}`);
+  log("info", `Source: ${dates.map(srcFor).join(", ")}  Destination: ${dates.map((dt) => `s3://${CFG.bucket}/${base}${dt}/`).join(", ")}`);
   log("info", `${plural(state.items.length, "file")}, ${fmtBytes(state.items.reduce((a, i) => a + i.size, 0))}`);
 
   let fatal = false;
   try {
     setPhase("Checking what is already in S3");
-    const remote = await listRemote(base);
-    log("info", `${remote.size} objects already in S3 under this date`);
+    const remote = new Map();
+    for (const dt of dates) (await listRemote(`${base}${dt}/`)).forEach((size, key) => remote.set(key, size));
+    log("info", `${remote.size} objects already in S3 under ${multi ? "these dates" : "this date"}`);
     state.items.forEach((i) => { if (remote.get(i.key) === i.size) { i.status = "skipped"; } });
     const skipped = state.items.filter((i) => i.status === "skipped").length;
     if (skipped) log("info", `Skipping ${plural(skipped, "file")} that ${skipped === 1 ? "is" : "are"} already in S3 with the same size`);
@@ -735,7 +791,7 @@ $("start").onclick = async () => {
 
   const c = (s) => state.items.filter((i) => i.status === s).length;
   const cancelled = ac.signal.aborted;
-  const summary = { user: state.user, date, bucket: CFG.bucket, prefix: base, uploaded: c("done"), skipped: c("skipped"), failed: c("failed"), notStarted: c("queued") + c("cancelled"), cancelled, seconds: Math.round((Date.now() - startedAt) / 1000) };
+  const summary = { user: state.user, dates: dates.join(","), bucket: CFG.bucket, prefix: base, uploaded: c("done"), skipped: c("skipped"), failed: c("failed"), notStarted: c("queued") + c("cancelled"), cancelled, seconds: Math.round((Date.now() - startedAt) / 1000) };
   summary.stoppedByError = fatal;
   setPhase(cancelled ? "Cancelled" : fatal ? "Stopped by an error" : summary.failed ? `Finished with ${summary.failed} failed` : "Upload complete");
   log(fatal ? "error" : cancelled || summary.failed ? "warn" : "ok",
@@ -748,7 +804,7 @@ $("start").onclick = async () => {
   if (summary.failed) $("filesBox").open = true;
   $("log").scrollTop = $("log").scrollHeight;
   state.lastRun = summary.failed || cancelled || fatal ? "attention" : "ok"; updateButtons();
-  $("pickFolder").disabled = false; $("dateSelect").disabled = false;
+  $("pickFolder").disabled = false; setDatesDisabled(false);
   render();
 };
 
